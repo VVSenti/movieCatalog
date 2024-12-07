@@ -1,21 +1,21 @@
 package ru.sentyurin.service;
 
 import java.util.List;
+import java.util.Optional;
 
-import ru.sentyurin.model.Movie;
 import ru.sentyurin.servlet.dto.MovieIncomingDto;
 import ru.sentyurin.servlet.dto.MovieOutgoingDto;
 
 public interface MovieService {
 
-	void createMovie(MovieIncomingDto movie);
+	MovieOutgoingDto createMovie(MovieIncomingDto movie);
 
 	List<MovieOutgoingDto> getMovies();
 
-	MovieOutgoingDto geMovieById(int id);
+	Optional<MovieOutgoingDto> getMovieById(int id);
 	
-	void updateMovie(MovieIncomingDto movie);
+	MovieOutgoingDto updateMovie(MovieIncomingDto movie);
 
-	void deleteMovie(MovieIncomingDto movie);
+	MovieOutgoingDto deleteMovie(MovieIncomingDto movie);
 
 }

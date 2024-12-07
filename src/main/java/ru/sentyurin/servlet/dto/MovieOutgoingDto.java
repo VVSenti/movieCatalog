@@ -1,5 +1,7 @@
 package ru.sentyurin.servlet.dto;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -16,8 +18,9 @@ public class MovieOutgoingDto {
 
 	public MovieOutgoingDto() {
 	}
-
+	
 	public MovieOutgoingDto(Movie movie) {
+		Objects.requireNonNull(movie);
 		id = movie.getId();
 		title = movie.getTitle();
 		releaseYear = movie.getReleaseYear();

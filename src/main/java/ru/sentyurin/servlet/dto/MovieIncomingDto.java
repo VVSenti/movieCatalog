@@ -3,6 +3,9 @@ package ru.sentyurin.servlet.dto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ru.sentyurin.model.Director;
+import ru.sentyurin.model.Movie;
+
 public class MovieIncomingDto {
 	private Integer id;
 	private String title;
@@ -65,5 +68,17 @@ public class MovieIncomingDto {
 		this.directorName = directorName;
 		return this;
 	}
-
+	
+	public Movie toMovie() {
+		Director director = new Director();
+		director.setId(directorId);
+		director.setName(directorName);
+		Movie movie = new Movie();
+		movie.setId(id);
+		movie.setTitle(title);
+		movie.setReleaseYear(releaseYear);
+		movie.setDirector(director);
+		return movie;
+	}
+	
 }

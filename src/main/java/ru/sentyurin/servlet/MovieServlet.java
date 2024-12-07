@@ -2,7 +2,7 @@ package ru.sentyurin.servlet;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Arrays;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletException;
@@ -18,6 +18,9 @@ import ru.sentyurin.service.MovieService;
 import ru.sentyurin.service.impl.MovieServiceImpl;
 import ru.sentyurin.servlet.dto.MovieIncomingDto;
 import ru.sentyurin.servlet.dto.MovieOutgoingDto;
+import ru.sentyurin.util.exeption.IncompleateInputExeption;
+import ru.sentyurin.util.exeption.InconsistentInputException;
+import ru.sentyurin.util.exeption.IncorrectInputException;
 
 /**
  * Servlet implementation class BooksController
@@ -43,7 +46,12 @@ public class MovieServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		response.setContentType("application/json");
-		PrintWriter writer = response.getWriter();
+
+		if (request.getParameter("id") != null) {
+			doGetById(request, response);
+			return;
+		}
+
 		String jsons = movieService.getMovies().stream().map(t -> {
 			try {
 				return t.toJsonRepresentation();
@@ -51,7 +59,8 @@ public class MovieServlet extends HttpServlet {
 				return "{JSON processing has failed}";
 			}
 		}).collect(Collectors.joining(", \n"));
-		writer.print("[" + jsons + "]");
+
+		response.getWriter().print("[" + jsons + "]");
 	}
 
 	/**
@@ -61,12 +70,23 @@ public class MovieServlet extends HttpServlet {
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		String json = Arrays.toString(request.getInputStream().readAllBytes());
+		String json = request.getReader().lines().collect(Collectors.joining("\n"));
 		try {
-			MovieIncomingDto movie = MovieIncomingDto.from(json);
-			movieService.createMovie(movie);
+			MovieOutgoingDto movie = movieService.createMovie(MovieIncomingDto.from(json));
+			response.setContentType("application/json");
+			response.getWriter().print(movie.toJsonRepresentation());
 		} catch (JsonProcessingException e) {
 			response.setStatus(400);
+			response.getWriter().print("Bad input JSON. " + e.getMessage());
+		} catch (IncompleateInputExeption e) {
+			response.setStatus(400);
+			response.getWriter().print("Incompleate data: " + e.getMessage());
+		} catch (IncorrectInputException e) {
+			response.setStatus(400);
+			response.getWriter().print("Incorrect data: " + e.getMessage());
+		} catch (InconsistentInputException e) {
+			response.setStatus(400);
+			response.getWriter().print("Inconsistent data: " + e.getMessage());
 		}
 	}
 
@@ -98,6 +118,26 @@ public class MovieServlet extends HttpServlet {
 
 	public void setMovieService(MovieService movieService) {
 		this.movieService = movieService;
+	}
+
+	private void doGetById(HttpServletRequest request, HttpServletResponse response)
+			throws IOException {
+		response.setContentType("application/json");
+
+		int movieId;
+		try {
+			movieId = Integer.parseInt(request.getParameter("id"));
+		} catch (NumberFormatException e) {
+			response.setStatus(400);
+			return;
+		}
+
+		Optional<MovieOutgoingDto> optionalMovie = movieService.getMovieById(movieId);
+		if (optionalMovie.isEmpty()) {
+			response.setStatus(404);
+			return;
+		}
+		response.getWriter().print(optionalMovie.get().toJsonRepresentation());
 	}
 
 }

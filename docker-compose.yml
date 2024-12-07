@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: postgres:16.4
+    environment:
+      POSTGRES_DB: "movieCatalogDB"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+    # эта папка используется для инициализации. В ней исполняются все .sql и .sh файлы
+    volumes:
+      - ./src/main/resources:/docker-entrypoint-initdb.d
+    ports:
+      - "5435:5432"
+    restart: always
+#  app:
+#    build: .
+#    ports:
+#      - "8080:8080"
+#    restart: always
