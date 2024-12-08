@@ -13,7 +13,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import ru.sentyurin.model.Movie;
 import ru.sentyurin.service.MovieService;
 import ru.sentyurin.service.impl.MovieServiceImpl;
 import ru.sentyurin.servlet.dto.MovieIncomingDto;
@@ -45,8 +44,6 @@ public class MovieServlet extends HttpServlet {
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		response.setContentType("application/json");
-
 		if (request.getParameter("id") != null) {
 			doGetById(request, response);
 			return;
@@ -60,6 +57,7 @@ public class MovieServlet extends HttpServlet {
 			}
 		}).collect(Collectors.joining(", \n"));
 
+		response.setContentType("application/json");
 		response.getWriter().print("[" + jsons + "]");
 	}
 
@@ -104,6 +102,30 @@ public class MovieServlet extends HttpServlet {
 	@Override
 	protected void doDelete(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
+		String movieIdAsString = request.getParameter("id");
+		if (movieIdAsString == null) {
+			response.setStatus(400);
+			response.getWriter().print("There must be path variable \"id\"");
+			return;
+		}
+		
+		int movieId;
+		try {
+			movieId = Integer.parseInt(request.getParameter("id"));
+		} catch (NumberFormatException e) {
+			response.setStatus(400);
+			response.getWriter().print("Incorrect \"id\" path variable format");
+			return;
+		}
+		
+		boolean resultStatus = movieService.deleteMovie(movieId);
+		if (resultStatus) {
+			response.getWriter().printf("Movie with id %d has been deleted", movieId);
+		} else {
+			response.setStatus(404);
+			response.getWriter().print("There is no movie with this ID");
+		}
+		
 	}
 
 	@Override
@@ -122,21 +144,23 @@ public class MovieServlet extends HttpServlet {
 
 	private void doGetById(HttpServletRequest request, HttpServletResponse response)
 			throws IOException {
-		response.setContentType("application/json");
 
 		int movieId;
 		try {
 			movieId = Integer.parseInt(request.getParameter("id"));
 		} catch (NumberFormatException e) {
 			response.setStatus(400);
+			response.getWriter().print("Incorrect \"id\" path variable format");
 			return;
 		}
 
 		Optional<MovieOutgoingDto> optionalMovie = movieService.getMovieById(movieId);
 		if (optionalMovie.isEmpty()) {
 			response.setStatus(404);
+			response.getWriter().print("There is no movie with this ID");
 			return;
 		}
+		response.setContentType("application/json");
 		response.getWriter().print(optionalMovie.get().toJsonRepresentation());
 	}
 

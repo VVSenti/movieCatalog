@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import ru.sentyurin.model.Movie;
 import ru.sentyurin.repository.MovieRepository;
+import ru.sentyurin.repository.Repository;
 import ru.sentyurin.service.MovieService;
 import ru.sentyurin.servlet.dto.MovieIncomingDto;
 import ru.sentyurin.servlet.dto.MovieOutgoingDto;
@@ -14,7 +15,7 @@ import ru.sentyurin.util.exeption.IncorrectInputException;
 public class MovieServiceImpl implements MovieService {
 
 	private static MovieServiceImpl movieService;
-	private MovieRepository movieRepository;
+	private Repository<Movie, Integer> movieRepository;
 
 	private MovieServiceImpl() {
 		movieRepository = new MovieRepository();
@@ -54,12 +55,13 @@ public class MovieServiceImpl implements MovieService {
 
 	@Override
 	public MovieOutgoingDto updateMovie(MovieIncomingDto movie) {
+		movieRepository.save(movie.toMovie());
 		return null;
 	}
 
 	@Override
-	public MovieOutgoingDto deleteMovie(MovieIncomingDto movie) {
-		return null;
+	public boolean deleteMovie(int id) {
+		return movieRepository.deleteById(id);
 	}
 
 }

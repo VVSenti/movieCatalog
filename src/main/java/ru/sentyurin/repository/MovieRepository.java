@@ -34,10 +34,12 @@ public class MovieRepository implements Repository<Movie, Integer> {
 			+ "where m.title = ?";
 
 	private static final String SAVE_MOVIE_SQL = "insert into Movie(title, release_year, director_id) values (?, ?, ?)";
+	
+	private static final String DELETE_MOVIE_BY_ID_SQL = "delete from Movie where id = ?";
 
 	private final MovieResultSetMapper resultSetMapper;
 	private final ConnectionManager connectionManager;
-	private final DirectorRepository directorRepository;
+	private final Repository<Director, Integer> directorRepository;
 
 	public MovieRepository() {
 		resultSetMapper = new MovieResultSetMapper();
@@ -107,10 +109,18 @@ public class MovieRepository implements Repository<Movie, Integer> {
 
 	@Override
 	public boolean deleteById(Integer id) {
-		return false;
+		try (Connection connection = connectionManager.getConnection();
+				PreparedStatement statement = connection
+						.prepareStatement(DELETE_MOVIE_BY_ID_SQL);) {
+			statement.setInt(1, id);
+			return statement.executeUpdate() == 1;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 
-	public Optional<Movie> findByTitle(String title) {
+	private Optional<Movie> findByTitle(String title) {
 		try (Connection connection = connectionManager.getConnection();
 				PreparedStatement statement = connection
 						.prepareStatement(GET_MOVIE_BY_TITLE_SQL);) {

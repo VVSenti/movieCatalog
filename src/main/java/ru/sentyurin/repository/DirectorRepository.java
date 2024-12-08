@@ -80,7 +80,7 @@ public class DirectorRepository implements Repository<Director, Integer> {
 		}
 	}
 
-	public Optional<Director> findByName(String name) {
+	private Optional<Director> findByName(String name) {
 		try (Connection connection = connectionManager.getConnection();
 				PreparedStatement statement = connection
 						.prepareStatement(GET_DIRECTOR_BY_NAME_SQL);) {

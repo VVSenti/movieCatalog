@@ -16,6 +16,6 @@ public interface MovieService {
 	
 	MovieOutgoingDto updateMovie(MovieIncomingDto movie);
 
-	MovieOutgoingDto deleteMovie(MovieIncomingDto movie);
+	boolean deleteMovie(int id);
 
 }
