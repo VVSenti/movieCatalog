@@ -12,4 +12,6 @@ public interface Repository<T, K> {
 
 	boolean deleteById(K id);
 
+	T update(T t);
+
 }

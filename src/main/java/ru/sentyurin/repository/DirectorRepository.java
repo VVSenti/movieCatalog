@@ -101,4 +101,10 @@ public class DirectorRepository implements Repository<Director, Integer> {
 		return false;
 	}
 
+	@Override
+	public Director update(Director director) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

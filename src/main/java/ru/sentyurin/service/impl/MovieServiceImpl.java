@@ -11,6 +11,7 @@ import ru.sentyurin.servlet.dto.MovieIncomingDto;
 import ru.sentyurin.servlet.dto.MovieOutgoingDto;
 import ru.sentyurin.util.exeption.IncompleateInputExeption;
 import ru.sentyurin.util.exeption.IncorrectInputException;
+import ru.sentyurin.util.exeption.NoDataInRepository;
 
 public class MovieServiceImpl implements MovieService {
 
@@ -31,12 +32,7 @@ public class MovieServiceImpl implements MovieService {
 	@Override
 	public MovieOutgoingDto createMovie(MovieIncomingDto movie)
 			throws IncompleateInputExeption, IncorrectInputException {
-		if (movie.getTitle() == null)
-			throw new IncompleateInputExeption("There must be a movie title");
-		if (movie.getReleaseYear() == null)
-			throw new IncompleateInputExeption("There must be a release year");
-		if (movie.getDirectorId() == null && movie.getDirectorName() == null)
-			throw new IncompleateInputExeption("There must be director ID or their name");
+		movieDataValidation(movie);
 		return new MovieOutgoingDto(movieRepository.save(movie.toMovie()));
 	}
 
@@ -48,20 +44,36 @@ public class MovieServiceImpl implements MovieService {
 	@Override
 	public Optional<MovieOutgoingDto> getMovieById(int id) {
 		Optional<Movie> optionalMovie = movieRepository.findById(id);
-		if (optionalMovie.isEmpty())
-			return Optional.empty();
-		return Optional.of(new MovieOutgoingDto(optionalMovie.get()));
+		return optionalMovie.isEmpty() ? Optional.empty()
+				: Optional.of(new MovieOutgoingDto(optionalMovie.get()));
+//		if (optionalMovie.isEmpty())
+//			return Optional.empty();
+//		return Optional.of(new MovieOutgoingDto(optionalMovie.get()));
 	}
 
 	@Override
 	public MovieOutgoingDto updateMovie(MovieIncomingDto movie) {
-		movieRepository.save(movie.toMovie());
-		return null;
+		if (movie.getId() == null)
+			throw new IncompleateInputExeption("There must be a movie ID");
+		movieDataValidation(movie);
+		return new MovieOutgoingDto(movieRepository.update(movie.toMovie()));
 	}
 
 	@Override
 	public boolean deleteMovie(int id) {
 		return movieRepository.deleteById(id);
+	}
+
+	private void movieDataValidation(MovieIncomingDto movie) {
+		if (movie.getTitle() == null)
+			throw new IncompleateInputExeption("There must be a movie title");
+		if (movie.getReleaseYear() == null)
+			throw new IncompleateInputExeption("There must be a release year");
+		if (movie.getReleaseYear() < 1895)
+			throw new IncorrectInputException(
+					"A release year is less than 1895. It is unacceptably suspicious");
+		if (movie.getDirectorId() == null && movie.getDirectorName() == null)
+			throw new IncompleateInputExeption("There must be director ID or their name");
 	}
 
 }

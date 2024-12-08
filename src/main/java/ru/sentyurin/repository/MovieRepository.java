@@ -14,13 +14,15 @@ import ru.sentyurin.model.Movie;
 import ru.sentyurin.repository.mapper.MovieResultSetMapper;
 import ru.sentyurin.util.exeption.InconsistentInputException;
 import ru.sentyurin.util.exeption.IncorrectInputException;
+import ru.sentyurin.util.exeption.NoDataInRepository;
 
 public class MovieRepository implements Repository<Movie, Integer> {
 
 	private static final String GET_ALL_MOVIES_SQL = "select m.id as id, "
 			+ "m.title as title, m.release_year as release_year, "
 			+ "d.id as director_id, d.name as director_name "
-			+ "from Movie as m left join Director as d on d.id = m.director_id";
+			+ "from Movie as m left join Director as d on d.id = m.director_id "
+			+ "order by m.id";
 
 	private static final String GET_MOVIE_BY_ID_SQL = "select m.id as id, "
 			+ "m.title as title, m.release_year as release_year, "
@@ -34,8 +36,10 @@ public class MovieRepository implements Repository<Movie, Integer> {
 			+ "where m.title = ?";
 
 	private static final String SAVE_MOVIE_SQL = "insert into Movie(title, release_year, director_id) values (?, ?, ?)";
-	
+
 	private static final String DELETE_MOVIE_BY_ID_SQL = "delete from Movie where id = ?";
+
+	private static final String UPDATE_MOVIE_BY_ID_SQL = "update Movie set title=?, release_year=?, director_id=? where id=?";
 
 	private final MovieResultSetMapper resultSetMapper;
 	private final ConnectionManager connectionManager;
@@ -120,6 +124,26 @@ public class MovieRepository implements Repository<Movie, Integer> {
 		}
 	}
 
+	@Override
+	public Movie update(Movie movie) throws NoDataInRepository {
+		findById(movie.getId())
+				.orElseThrow(() -> new NoDataInRepository("There is no movie with this id"));
+		try (Connection connection = connectionManager.getConnection();
+				PreparedStatement statement = connection
+						.prepareStatement(UPDATE_MOVIE_BY_ID_SQL);) {
+			statement.setString(1, movie.getTitle());
+			statement.setInt(2, movie.getReleaseYear());
+			statement.setInt(3, movie.getDirector().getId());
+			statement.setInt(4, movie.getId());
+			statement.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+		return findById(movie.getId())
+				.orElseThrow(() -> new NoDataInRepository("There is no movie with this id"));
+	}
+
 	private Optional<Movie> findByTitle(String title) {
 		try (Connection connection = connectionManager.getConnection();
 				PreparedStatement statement = connection
@@ -135,5 +159,4 @@ public class MovieRepository implements Repository<Movie, Integer> {
 			return Optional.empty();
 		}
 	}
-
 }

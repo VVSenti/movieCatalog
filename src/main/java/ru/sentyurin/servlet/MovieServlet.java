@@ -20,6 +20,7 @@ import ru.sentyurin.servlet.dto.MovieOutgoingDto;
 import ru.sentyurin.util.exeption.IncompleateInputExeption;
 import ru.sentyurin.util.exeption.InconsistentInputException;
 import ru.sentyurin.util.exeption.IncorrectInputException;
+import ru.sentyurin.util.exeption.NoDataInRepository;
 
 /**
  * Servlet implementation class BooksController
@@ -94,6 +95,27 @@ public class MovieServlet extends HttpServlet {
 	@Override
 	protected void doPut(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
+		String json = request.getReader().lines().collect(Collectors.joining("\n"));
+		try {
+			MovieOutgoingDto movie = movieService.updateMovie(MovieIncomingDto.from(json));
+			response.setContentType("application/json");
+			response.getWriter().print(movie.toJsonRepresentation());
+		} catch (JsonProcessingException e) {
+			response.setStatus(400);
+			response.getWriter().print("Bad input JSON. " + e.getMessage());
+		} catch (IncompleateInputExeption e) {
+			response.setStatus(400);
+			response.getWriter().print("Incompleate data: " + e.getMessage());
+		} catch (IncorrectInputException e) {
+			response.setStatus(400);
+			response.getWriter().print("Incorrect data: " + e.getMessage());
+		} catch (InconsistentInputException e) {
+			response.setStatus(400);
+			response.getWriter().print("Inconsistent data: " + e.getMessage());
+		} catch (NoDataInRepository e) {
+			response.setStatus(404);
+			response.getWriter().print("There is no movie with this ID");
+		}
 	}
 
 	/**
@@ -108,7 +130,7 @@ public class MovieServlet extends HttpServlet {
 			response.getWriter().print("There must be path variable \"id\"");
 			return;
 		}
-		
+
 		int movieId;
 		try {
 			movieId = Integer.parseInt(request.getParameter("id"));
@@ -117,7 +139,7 @@ public class MovieServlet extends HttpServlet {
 			response.getWriter().print("Incorrect \"id\" path variable format");
 			return;
 		}
-		
+
 		boolean resultStatus = movieService.deleteMovie(movieId);
 		if (resultStatus) {
 			response.getWriter().printf("Movie with id %d has been deleted", movieId);
@@ -125,7 +147,7 @@ public class MovieServlet extends HttpServlet {
 			response.setStatus(404);
 			response.getWriter().print("There is no movie with this ID");
 		}
-		
+
 	}
 
 	@Override
