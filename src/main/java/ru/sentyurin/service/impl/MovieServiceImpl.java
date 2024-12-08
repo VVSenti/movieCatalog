@@ -6,6 +6,7 @@ import java.util.Optional;
 import ru.sentyurin.model.Movie;
 import ru.sentyurin.repository.MovieRepository;
 import ru.sentyurin.repository.Repository;
+import ru.sentyurin.repository.RepositoryFactory;
 import ru.sentyurin.service.MovieService;
 import ru.sentyurin.servlet.dto.MovieIncomingDto;
 import ru.sentyurin.servlet.dto.MovieOutgoingDto;
@@ -15,19 +16,13 @@ import ru.sentyurin.util.exeption.NoDataInRepository;
 
 public class MovieServiceImpl implements MovieService {
 
-	private static MovieServiceImpl movieService;
 	private Repository<Movie, Integer> movieRepository;
 
-	private MovieServiceImpl() {
-		movieRepository = new MovieRepository();
+	@SuppressWarnings("unchecked")
+	public MovieServiceImpl() {
+		movieRepository = (Repository<Movie, Integer>) RepositoryFactory.getRepository(Movie.class);
 	}
 
-	public static MovieServiceImpl getMovieService() {
-		if (movieService == null) {
-			movieService = new MovieServiceImpl();
-		}
-		return movieService;
-	}
 
 	@Override
 	public MovieOutgoingDto createMovie(MovieIncomingDto movie)
@@ -46,9 +41,6 @@ public class MovieServiceImpl implements MovieService {
 		Optional<Movie> optionalMovie = movieRepository.findById(id);
 		return optionalMovie.isEmpty() ? Optional.empty()
 				: Optional.of(new MovieOutgoingDto(optionalMovie.get()));
-//		if (optionalMovie.isEmpty())
-//			return Optional.empty();
-//		return Optional.of(new MovieOutgoingDto(optionalMovie.get()));
 	}
 
 	@Override
@@ -75,5 +67,4 @@ public class MovieServiceImpl implements MovieService {
 		if (movie.getDirectorId() == null && movie.getDirectorName() == null)
 			throw new IncompleateInputExeption("There must be director ID or their name");
 	}
-
 }
