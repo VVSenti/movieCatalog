@@ -48,7 +48,7 @@ public class MovieServiceImpl implements MovieService {
 		if (movie.getId() == null)
 			throw new IncompleateInputExeption("There must be a movie ID");
 		movieDataValidation(movie);
-		return new MovieOutgoingDto(movieRepository.update(movie.toMovie()));
+		return new MovieOutgoingDto(movieRepository.update(movie.toMovie()).get());
 	}
 
 	@Override

@@ -12,6 +12,8 @@ public interface Repository<T, K> {
 
 	boolean deleteById(K id);
 
-	T update(T t);
+	Optional<T> update(T t);
+	
+	boolean isPresentWithId(K id);
 
 }

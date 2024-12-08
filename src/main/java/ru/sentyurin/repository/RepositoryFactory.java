@@ -10,8 +10,12 @@ public class RepositoryFactory {
 	private static final Map<Class<?>, Repository<?, ?>> map;
 	static {
 		map = new HashMap<>();
-		map.put(Movie.class, new MovieRepository());
-		map.put(Director.class, new DirectorRepository());
+		MovieRepository movieRepository = new MovieRepository();
+		DirectorRepository directorRepository = new DirectorRepository();
+		movieRepository.setDirectorRepository(directorRepository);
+		directorRepository.setMovieRepository(movieRepository);
+		map.put(Movie.class, movieRepository);
+		map.put(Director.class, directorRepository);
 	}
 
 	private RepositoryFactory() {

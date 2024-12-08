@@ -10,25 +10,35 @@ import java.util.Optional;
 import ru.sentyurin.db.ConnectionManager;
 import ru.sentyurin.db.ConnectionToDbManager;
 import ru.sentyurin.model.Director;
-import ru.sentyurin.model.Movie;
 import ru.sentyurin.repository.mapper.DirectorResultSetMapper;
-import ru.sentyurin.repository.mapper.MovieResultSetMapper;
 
 public class DirectorRepository implements Repository<Director, Integer> {
 
 	private static final String GET_ALL_DIRECTORS_SQL = "select id, name from Director";
 
 	private static final String GET_DIRECTOR_BY_ID_SQL = "select id, name from Director where id = ?";
+
 	private static final String GET_DIRECTOR_BY_NAME_SQL = "select id, name from Director where name = ?";
 
 	private static final String SAVE_DIRECTOR_SQL = "insert into Director(name) values(?)";
 
-	private DirectorResultSetMapper resultSetMapper;
-	private ConnectionManager connectionManager;
+	private static final String CHECK_BY_ID_SQL = "select id from Director where id=?";
+
+	private final DirectorResultSetMapper resultSetMapper;
+	private final ConnectionManager connectionManager;
+	private MovieRepository movieRepository;
 
 	public DirectorRepository() {
 		resultSetMapper = new DirectorResultSetMapper();
 		connectionManager = new ConnectionToDbManager();
+	}
+
+	public MovieRepository getMovieRepository() {
+		return movieRepository;
+	}
+
+	public void setMovieRepository(MovieRepository movieRepository) {
+		this.movieRepository = movieRepository;
 	}
 
 	@Override
@@ -39,8 +49,7 @@ public class DirectorRepository implements Repository<Director, Integer> {
 			return directorInDB.get();
 		}
 		try (Connection connection = connectionManager.getConnection();
-				PreparedStatement statement = connection
-						.prepareStatement(SAVE_DIRECTOR_SQL);) {
+				PreparedStatement statement = connection.prepareStatement(SAVE_DIRECTOR_SQL)) {
 			statement.setString(1, directorName);
 			statement.executeUpdate();
 		} catch (SQLException e) {
@@ -48,7 +57,7 @@ public class DirectorRepository implements Repository<Director, Integer> {
 			return null;
 		}
 		return findByName(directorName).orElse(null);
-		
+
 	}
 
 	@Override
@@ -66,17 +75,43 @@ public class DirectorRepository implements Repository<Director, Integer> {
 	@Override
 	public Optional<Director> findById(Integer id) {
 		try (Connection connection = connectionManager.getConnection();
-				PreparedStatement statement = connection
-						.prepareStatement(GET_DIRECTOR_BY_ID_SQL);) {
+				PreparedStatement statement = connection.prepareStatement(GET_DIRECTOR_BY_ID_SQL)) {
 			statement.setInt(1, id);
 			ResultSet resultSet = statement.executeQuery();
 			List<Director> directors = resultSetMapper.map(resultSet);
 			if (directors.isEmpty())
 				return Optional.empty();
-			return Optional.of(directors.getFirst());
+			Director director = directors.getFirst();
+			director.setMovies(movieRepository.findByDirectorId(id));
+			return Optional.of(director);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return Optional.empty();
+		}
+	}
+
+	@Override
+	public boolean deleteById(Integer id) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public Optional<Director> update(Director director) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean isPresentWithId(Integer id) {
+		try (Connection connection = connectionManager.getConnection();
+				PreparedStatement statement = connection.prepareStatement(CHECK_BY_ID_SQL)) {
+			statement.setInt(1, id);
+			ResultSet resultSet = statement.executeQuery();
+			return resultSet.next();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
 		}
 	}
 
@@ -94,18 +129,6 @@ public class DirectorRepository implements Repository<Director, Integer> {
 			e.printStackTrace();
 			return Optional.empty();
 		}
-	}
-
-	@Override
-	public boolean deleteById(Integer id) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public Director update(Director director) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 }

@@ -21,8 +21,12 @@ public class MovieRepository implements Repository<Movie, Integer> {
 	private static final String GET_ALL_MOVIES_SQL = "select m.id as id, "
 			+ "m.title as title, m.release_year as release_year, "
 			+ "d.id as director_id, d.name as director_name "
-			+ "from Movie as m left join Director as d on d.id = m.director_id "
-			+ "order by m.id";
+			+ "from Movie as m left join Director as d on d.id = m.director_id " + "order by m.id";
+
+	private static final String GET_ALL_MOVIES_BY_DIRECTOR_ID_SQL = "select m.id as id, "
+			+ "m.title as title, m.release_year as release_year, "
+			+ "d.id as director_id, d.name as director_name "
+			+ "from Movie as m left join Director as d on d.id = m.director_id where d.id=? order by m.id";
 
 	private static final String GET_MOVIE_BY_ID_SQL = "select m.id as id, "
 			+ "m.title as title, m.release_year as release_year, "
@@ -41,14 +45,23 @@ public class MovieRepository implements Repository<Movie, Integer> {
 
 	private static final String UPDATE_MOVIE_BY_ID_SQL = "update Movie set title=?, release_year=?, director_id=? where id=?";
 
+	private static final String CHECK_BY_ID_SQL = "select id from Movie where id=?";
+
 	private final MovieResultSetMapper resultSetMapper;
 	private final ConnectionManager connectionManager;
-	private final Repository<Director, Integer> directorRepository;
+	private Repository<Director, Integer> directorRepository;
 
 	public MovieRepository() {
 		resultSetMapper = new MovieResultSetMapper();
 		connectionManager = new ConnectionToDbManager();
-		directorRepository = new DirectorRepository();
+	}
+
+	public Repository<Director, Integer> getDirectorRepository() {
+		return directorRepository;
+	}
+
+	public void setDirectorRepository(Repository<Director, Integer> directorRepository) {
+		this.directorRepository = directorRepository;
 	}
 
 	@Override
@@ -125,9 +138,10 @@ public class MovieRepository implements Repository<Movie, Integer> {
 	}
 
 	@Override
-	public Movie update(Movie movie) throws NoDataInRepository {
-		findById(movie.getId())
-				.orElseThrow(() -> new NoDataInRepository("There is no movie with this id"));
+	public Optional<Movie> update(Movie movie) throws NoDataInRepository {
+		if (!isPresentWithId(movie.getId())) {
+			throw new NoDataInRepository("There is no movie with this id");
+		}
 		try (Connection connection = connectionManager.getConnection();
 				PreparedStatement statement = connection
 						.prepareStatement(UPDATE_MOVIE_BY_ID_SQL);) {
@@ -138,10 +152,9 @@ public class MovieRepository implements Repository<Movie, Integer> {
 			statement.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
-			return null;
+			return Optional.empty();
 		}
-		return findById(movie.getId())
-				.orElseThrow(() -> new NoDataInRepository("There is no movie with this id"));
+		return findById(movie.getId());
 	}
 
 	private Optional<Movie> findByTitle(String title) {
@@ -157,6 +170,31 @@ public class MovieRepository implements Repository<Movie, Integer> {
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return Optional.empty();
+		}
+	}
+
+	@Override
+	public boolean isPresentWithId(Integer id) {
+		try (Connection connection = connectionManager.getConnection();
+				PreparedStatement statement = connection.prepareStatement(CHECK_BY_ID_SQL)) {
+			statement.setInt(1, id);
+			ResultSet resultSet = statement.executeQuery();
+			return resultSet.next();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	public List<Movie> findByDirectorId(Integer id) {
+		try (Connection connection = connectionManager.getConnection();
+				PreparedStatement statement = connection
+						.prepareStatement(GET_ALL_MOVIES_BY_DIRECTOR_ID_SQL);) {
+			statement.setInt(1, id);
+			return resultSetMapper.map(statement.executeQuery());
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return List.of();
 		}
 	}
 }
