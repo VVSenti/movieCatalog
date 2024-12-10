@@ -11,18 +11,23 @@ import ru.sentyurin.db.ConnectionManager;
 import ru.sentyurin.db.ConnectionToDbManager;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.repository.mapper.DirectorResultSetMapper;
+import ru.sentyurin.util.exсeption.NoDataInRepository;
 
 public class DirectorRepository implements Repository<Director, Integer> {
 
-	private static final String GET_ALL_DIRECTORS_SQL = "select id, name from Director";
+	private static final String GET_ALL_SQL = "select id, name from Director";
 
-	private static final String GET_DIRECTOR_BY_ID_SQL = "select id, name from Director where id = ?";
+	private static final String GET_BY_ID_SQL = "select id, name from Director where id = ?";
 
-	private static final String GET_DIRECTOR_BY_NAME_SQL = "select id, name from Director where name = ?";
+	private static final String GET_BY_NAME_SQL = "select id, name from Director where name = ?";
 
-	private static final String SAVE_DIRECTOR_SQL = "insert into Director(name) values(?)";
+	private static final String SAVE_SQL = "insert into Director(name) values(?)";
 
 	private static final String CHECK_BY_ID_SQL = "select id from Director where id=?";
+
+	private static final String DELETE_BY_ID_SQL = "delete from Director where id = ?";
+
+	private static final String UPDATE_BY_ID_SQL = "update Director set name=? where id=?";
 
 	private final DirectorResultSetMapper resultSetMapper;
 	private final ConnectionManager connectionManager;
@@ -49,7 +54,7 @@ public class DirectorRepository implements Repository<Director, Integer> {
 			return directorInDB.get();
 		}
 		try (Connection connection = connectionManager.getConnection();
-				PreparedStatement statement = connection.prepareStatement(SAVE_DIRECTOR_SQL)) {
+				PreparedStatement statement = connection.prepareStatement(SAVE_SQL)) {
 			statement.setString(1, directorName);
 			statement.executeUpdate();
 		} catch (SQLException e) {
@@ -63,7 +68,7 @@ public class DirectorRepository implements Repository<Director, Integer> {
 	@Override
 	public List<Director> findAll() {
 		try (Connection connection = connectionManager.getConnection();
-				PreparedStatement statement = connection.prepareStatement(GET_ALL_DIRECTORS_SQL);
+				PreparedStatement statement = connection.prepareStatement(GET_ALL_SQL);
 				ResultSet resultSet = statement.executeQuery()) {
 			return resultSetMapper.map(resultSet);
 		} catch (SQLException e) {
@@ -75,7 +80,7 @@ public class DirectorRepository implements Repository<Director, Integer> {
 	@Override
 	public Optional<Director> findById(Integer id) {
 		try (Connection connection = connectionManager.getConnection();
-				PreparedStatement statement = connection.prepareStatement(GET_DIRECTOR_BY_ID_SQL)) {
+				PreparedStatement statement = connection.prepareStatement(GET_BY_ID_SQL)) {
 			statement.setInt(1, id);
 			ResultSet resultSet = statement.executeQuery();
 			List<Director> directors = resultSetMapper.map(resultSet);
@@ -92,14 +97,35 @@ public class DirectorRepository implements Repository<Director, Integer> {
 
 	@Override
 	public boolean deleteById(Integer id) {
-		// TODO Auto-generated method stub
-		return false;
+		try (Connection connection = connectionManager.getConnection();
+				PreparedStatement statement = connection.prepareStatement(DELETE_BY_ID_SQL);) {
+			statement.setInt(1, id);
+			if (statement.executeUpdate() == 0) {
+				return false;
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+		movieRepository.deleteByDirectorId(id);
+		return true;
 	}
 
 	@Override
 	public Optional<Director> update(Director director) {
-		// TODO Auto-generated method stub
-		return null;
+		if (!isPresentWithId(director.getId())) {
+			throw new NoDataInRepository("There is no movie with this id");
+		}
+		try (Connection connection = connectionManager.getConnection();
+				PreparedStatement statement = connection.prepareStatement(UPDATE_BY_ID_SQL);) {
+			statement.setString(1, director.getName());
+			statement.setInt(2, director.getId());
+			statement.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return Optional.empty();
+		}
+		return findById(director.getId());
 	}
 
 	@Override
@@ -117,8 +143,7 @@ public class DirectorRepository implements Repository<Director, Integer> {
 
 	private Optional<Director> findByName(String name) {
 		try (Connection connection = connectionManager.getConnection();
-				PreparedStatement statement = connection
-						.prepareStatement(GET_DIRECTOR_BY_NAME_SQL);) {
+				PreparedStatement statement = connection.prepareStatement(GET_BY_NAME_SQL);) {
 			statement.setString(1, name);
 			ResultSet resultSet = statement.executeQuery();
 			List<Director> directors = resultSetMapper.map(resultSet);

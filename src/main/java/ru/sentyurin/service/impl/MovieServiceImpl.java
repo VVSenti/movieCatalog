@@ -10,9 +10,9 @@ import ru.sentyurin.repository.RepositoryFactory;
 import ru.sentyurin.service.MovieService;
 import ru.sentyurin.servlet.dto.MovieIncomingDto;
 import ru.sentyurin.servlet.dto.MovieOutgoingDto;
-import ru.sentyurin.util.exeption.IncompleateInputExeption;
-import ru.sentyurin.util.exeption.IncorrectInputException;
-import ru.sentyurin.util.exeption.NoDataInRepository;
+import ru.sentyurin.util.exсeption.IncompleateInputExeption;
+import ru.sentyurin.util.exсeption.IncorrectInputException;
+import ru.sentyurin.util.exсeption.NoDataInRepository;
 
 public class MovieServiceImpl implements MovieService {
 

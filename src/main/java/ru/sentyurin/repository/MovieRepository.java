@@ -12,9 +12,9 @@ import ru.sentyurin.db.ConnectionToDbManager;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.model.Movie;
 import ru.sentyurin.repository.mapper.MovieResultSetMapper;
-import ru.sentyurin.util.exeption.InconsistentInputException;
-import ru.sentyurin.util.exeption.IncorrectInputException;
-import ru.sentyurin.util.exeption.NoDataInRepository;
+import ru.sentyurin.util.exсeption.InconsistentInputException;
+import ru.sentyurin.util.exсeption.IncorrectInputException;
+import ru.sentyurin.util.exсeption.NoDataInRepository;
 
 public class MovieRepository implements Repository<Movie, Integer> {
 
@@ -39,11 +39,13 @@ public class MovieRepository implements Repository<Movie, Integer> {
 			+ "from Movie as m left join Director as d on d.id = m.director_id "
 			+ "where m.title = ?";
 
-	private static final String SAVE_MOVIE_SQL = "insert into Movie(title, release_year, director_id) values (?, ?, ?)";
+	private static final String SAVE_MOVIE_SQL = "insert into Movie(title, release_year, director_id) values (?,?,?)";
 
-	private static final String DELETE_MOVIE_BY_ID_SQL = "delete from Movie where id = ?";
+	private static final String DELETE_BY_ID_SQL = "delete from Movie where id = ?";
+	
+	private static final String DELETE_BY_DIRECTOR_ID_SQL = "delete from Movie where director_id=?";
 
-	private static final String UPDATE_MOVIE_BY_ID_SQL = "update Movie set title=?, release_year=?, director_id=? where id=?";
+	private static final String UPDATE_BY_ID_SQL = "update Movie set title=?, release_year=?, director_id=? where id=?";
 
 	private static final String CHECK_BY_ID_SQL = "select id from Movie where id=?";
 
@@ -128,9 +130,21 @@ public class MovieRepository implements Repository<Movie, Integer> {
 	public boolean deleteById(Integer id) {
 		try (Connection connection = connectionManager.getConnection();
 				PreparedStatement statement = connection
-						.prepareStatement(DELETE_MOVIE_BY_ID_SQL);) {
+						.prepareStatement(DELETE_BY_ID_SQL);) {
 			statement.setInt(1, id);
 			return statement.executeUpdate() == 1;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	public boolean deleteByDirectorId(Integer id) {
+		try (Connection connection = connectionManager.getConnection();
+				PreparedStatement statement = connection
+						.prepareStatement(DELETE_BY_DIRECTOR_ID_SQL);) {
+			statement.setInt(1, id);
+			return statement.executeUpdate() > 0;
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return false;
@@ -144,7 +158,7 @@ public class MovieRepository implements Repository<Movie, Integer> {
 		}
 		try (Connection connection = connectionManager.getConnection();
 				PreparedStatement statement = connection
-						.prepareStatement(UPDATE_MOVIE_BY_ID_SQL);) {
+						.prepareStatement(UPDATE_BY_ID_SQL);) {
 			statement.setString(1, movie.getTitle());
 			statement.setInt(2, movie.getReleaseYear());
 			statement.setInt(3, movie.getDirector().getId());
