@@ -3,6 +3,8 @@ package ru.sentyurin.repository;
 import java.util.List;
 import java.util.Optional;
 
+import ru.sentyurin.db.ConnectionManager;
+
 public interface Repository<T, K> {
 	T save(T t);
 
@@ -15,5 +17,11 @@ public interface Repository<T, K> {
 	Optional<T> update(T t);
 	
 	boolean isPresentWithId(K id);
+	
+	public ConnectionManager getConnectionManager();
+
+	public void setConnectionManager(ConnectionManager connectionManager);
+
+	void initDb();
 
 }

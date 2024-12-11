@@ -1,7 +1,6 @@
 package ru.sentyurin.servlet;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -12,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ru.sentyurin.service.MovieService;
 import ru.sentyurin.service.impl.MovieServiceImpl;
@@ -27,15 +27,19 @@ import ru.sentyurin.util.exсeption.NoDataInRepository;
  */
 @WebServlet("/movies")
 public class MovieServlet extends HttpServlet {
-
 	private static final long serialVersionUID = 1L;
+	private static final String JSON_MIME = "application/json";
+	private static final String NOT_FOUND_BY_ID_MSG = "There is no movie with this ID";
+
 	private MovieService movieService;
+	private final ObjectMapper objectMapper;
 
 	/**
 	 * @see HttpServlet#HttpServlet()
 	 */
 	public MovieServlet() {
 		super();
+		objectMapper = new ObjectMapper();
 	}
 
 	/**
@@ -49,17 +53,8 @@ public class MovieServlet extends HttpServlet {
 			doGetById(request, response);
 			return;
 		}
-
-		String jsons = movieService.getMovies().stream().map(t -> {
-			try {
-				return t.toJsonRepresentation();
-			} catch (JsonProcessingException e) {
-				return "{JSON processing has failed}";
-			}
-		}).collect(Collectors.joining(", \n"));
-
-		response.setContentType("application/json");
-		response.getWriter().print("[" + jsons + "]");
+		response.setContentType(JSON_MIME);
+		response.getWriter().print(objectMapper.writeValueAsString(movieService.getMovies()));
 	}
 
 	/**
@@ -71,9 +66,12 @@ public class MovieServlet extends HttpServlet {
 			throws ServletException, IOException {
 		String json = request.getReader().lines().collect(Collectors.joining("\n"));
 		try {
-			MovieOutgoingDto movie = movieService.createMovie(MovieIncomingDto.from(json));
-			response.setContentType("application/json");
-			response.getWriter().print(movie.toJsonRepresentation());
+			MovieIncomingDto movieIncomingDto = objectMapper.readValue(json,
+					MovieIncomingDto.class);
+			MovieOutgoingDto movie = movieService.createMovie(movieIncomingDto);
+			response.setContentType(JSON_MIME);
+			response.getWriter().print(objectMapper.writeValueAsString(movie));
+			response.setStatus(201);
 		} catch (JsonProcessingException e) {
 			response.setStatus(400);
 			response.getWriter().print("Bad input JSON. " + e.getMessage());
@@ -97,9 +95,11 @@ public class MovieServlet extends HttpServlet {
 			throws ServletException, IOException {
 		String json = request.getReader().lines().collect(Collectors.joining("\n"));
 		try {
-			MovieOutgoingDto movie = movieService.updateMovie(MovieIncomingDto.from(json));
-			response.setContentType("application/json");
-			response.getWriter().print(movie.toJsonRepresentation());
+			MovieIncomingDto movieIncomingDto = objectMapper.readValue(json,
+					MovieIncomingDto.class);
+			MovieOutgoingDto movie = movieService.updateMovie(movieIncomingDto);
+			response.setContentType(JSON_MIME);
+			response.getWriter().print(objectMapper.writeValueAsString(movie));
 		} catch (JsonProcessingException e) {
 			response.setStatus(400);
 			response.getWriter().print("Bad input JSON. " + e.getMessage());
@@ -114,7 +114,7 @@ public class MovieServlet extends HttpServlet {
 			response.getWriter().print("Inconsistent data: " + e.getMessage());
 		} catch (NoDataInRepository e) {
 			response.setStatus(404);
-			response.getWriter().print("There is no movie with this ID");
+			response.getWriter().print(NOT_FOUND_BY_ID_MSG);
 		}
 	}
 
@@ -142,10 +142,11 @@ public class MovieServlet extends HttpServlet {
 
 		boolean resultStatus = movieService.deleteMovie(movieId);
 		if (resultStatus) {
+			response.setStatus(200);
 			response.getWriter().printf("Movie with id %d has been deleted", movieId);
 		} else {
 			response.setStatus(404);
-			response.getWriter().print("There is no movie with this ID");
+			response.getWriter().print(NOT_FOUND_BY_ID_MSG);
 		}
 
 	}
@@ -156,17 +157,12 @@ public class MovieServlet extends HttpServlet {
 		movieService = new MovieServiceImpl();
 	}
 
-	public MovieService getMovieService() {
-		return movieService;
-	}
-
 	public void setMovieService(MovieService movieService) {
 		this.movieService = movieService;
 	}
 
 	private void doGetById(HttpServletRequest request, HttpServletResponse response)
 			throws IOException {
-
 		int movieId;
 		try {
 			movieId = Integer.parseInt(request.getParameter("id"));
@@ -179,11 +175,12 @@ public class MovieServlet extends HttpServlet {
 		Optional<MovieOutgoingDto> optionalMovie = movieService.getMovieById(movieId);
 		if (optionalMovie.isEmpty()) {
 			response.setStatus(404);
-			response.getWriter().print("There is no movie with this ID");
+			response.getWriter().print(NOT_FOUND_BY_ID_MSG);
 			return;
 		}
-		response.setContentType("application/json");
-		response.getWriter().print(optionalMovie.get().toJsonRepresentation());
+
+		response.setContentType(JSON_MIME);
+		response.getWriter().print(objectMapper.writeValueAsString(optionalMovie.get()));
 	}
 
 }

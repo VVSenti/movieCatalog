@@ -1,4 +1,4 @@
-driverClassName=
-url=
-userName=
-password=
+driverClassName=testDriver
+url=testUrl
+userName=testUserName
+password=testPassword

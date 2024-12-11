@@ -1,23 +1,15 @@
 package ru.sentyurin.servlet.dto;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import ru.sentyurin.model.Director;
-
 public class DirectorIncomingDto {
 	private Integer id;
 	private String name;
 
-	/**
-	 * makes DirectorIncomingDto instance from JSON string
-	 * 
-	 * @param json string
-	 * @return
-	 * @throws JsonProcessingException
-	 */
-	public static DirectorIncomingDto from(String json) throws JsonProcessingException {
-		return new ObjectMapper().readValue(json, DirectorIncomingDto.class);
+	public DirectorIncomingDto() {
+	}
+
+	public DirectorIncomingDto(Integer id, String name) {
+		this.id = id;
+		this.name = name;
 	}
 
 	public Integer getId() {
@@ -37,12 +29,4 @@ public class DirectorIncomingDto {
 		this.name = name;
 		return this;
 	}
-
-	public Director toDirector() {
-		Director director = new Director();
-		director.setId(id);
-		director.setName(name);
-		return director;
-	}
-
 }

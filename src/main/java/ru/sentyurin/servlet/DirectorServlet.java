@@ -1,7 +1,6 @@
 package ru.sentyurin.servlet;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -12,18 +11,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ru.sentyurin.service.DirectorService;
-import ru.sentyurin.service.MovieService;
 import ru.sentyurin.service.impl.DirectorServiceImpl;
-import ru.sentyurin.service.impl.MovieServiceImpl;
 import ru.sentyurin.servlet.dto.DirectorIncomingDto;
 import ru.sentyurin.servlet.dto.DirectorOutgoingDto;
-import ru.sentyurin.servlet.dto.MovieIncomingDto;
-import ru.sentyurin.servlet.dto.MovieOutgoingDto;
 import ru.sentyurin.util.exсeption.IncompleateInputExeption;
-import ru.sentyurin.util.exсeption.InconsistentInputException;
-import ru.sentyurin.util.exсeption.IncorrectInputException;
 import ru.sentyurin.util.exсeption.NoDataInRepository;
 
 /**
@@ -33,6 +27,8 @@ import ru.sentyurin.util.exсeption.NoDataInRepository;
 public class DirectorServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
+	private static final String JSON_MIME = "application/json";
+	private final ObjectMapper objectMapper;
 	private DirectorService directorService;
 
 	/**
@@ -40,6 +36,7 @@ public class DirectorServlet extends HttpServlet {
 	 */
 	public DirectorServlet() {
 		super();
+		objectMapper = new ObjectMapper();
 	}
 
 	/**
@@ -53,17 +50,8 @@ public class DirectorServlet extends HttpServlet {
 			doGetById(request, response);
 			return;
 		}
-
-		String jsons = directorService.getDirectors().stream().map(d -> {
-			try {
-				return d.toJsonRepresentation();
-			} catch (JsonProcessingException e) {
-				return "{JSON processing has failed}";
-			}
-		}).collect(Collectors.joining(", \n"));
-
-		response.setContentType("application/json");
-		response.getWriter().print("[" + jsons + "]");
+		response.setContentType(JSON_MIME);
+		response.getWriter().print(objectMapper.writeValueAsString(directorService.getDirectors()));
 	}
 
 	/**
@@ -75,21 +63,17 @@ public class DirectorServlet extends HttpServlet {
 			throws ServletException, IOException {
 		String json = request.getReader().lines().collect(Collectors.joining("\n"));
 		try {
-			DirectorOutgoingDto director = directorService.createDirector(DirectorIncomingDto.from(json));
-			response.setContentType("application/json");
-			response.getWriter().print(director.toJsonRepresentation());
+			DirectorIncomingDto incomingDto = objectMapper.readValue(json, DirectorIncomingDto.class);
+			DirectorOutgoingDto director = directorService.createDirector(incomingDto);
+			response.setContentType(JSON_MIME);
+			response.getWriter().print(objectMapper.writeValueAsString(director));
+			response.setStatus(201);
 		} catch (JsonProcessingException e) {
 			response.setStatus(400);
 			response.getWriter().print("Bad input JSON. " + e.getMessage());
 		} catch (IncompleateInputExeption e) {
 			response.setStatus(400);
 			response.getWriter().print("Incompleate data: " + e.getMessage());
-		} catch (IncorrectInputException e) {
-			response.setStatus(400);
-			response.getWriter().print("Incorrect data: " + e.getMessage());
-		} catch (InconsistentInputException e) {
-			response.setStatus(400);
-			response.getWriter().print("Inconsistent data: " + e.getMessage());
 		}
 	}
 
@@ -101,21 +85,16 @@ public class DirectorServlet extends HttpServlet {
 			throws ServletException, IOException {
 		String json = request.getReader().lines().collect(Collectors.joining("\n"));
 		try {
-			DirectorOutgoingDto director = directorService.updateDirector(DirectorIncomingDto.from(json));
-			response.setContentType("application/json");
-			response.getWriter().print(director.toJsonRepresentation());
+			DirectorIncomingDto incomingDto = objectMapper.readValue(json, DirectorIncomingDto.class);
+			DirectorOutgoingDto director = directorService.updateDirector(incomingDto);
+			response.setContentType(JSON_MIME);
+			response.getWriter().print(objectMapper.writeValueAsString(director));
 		} catch (JsonProcessingException e) {
 			response.setStatus(400);
 			response.getWriter().print("Bad input JSON. " + e.getMessage());
 		} catch (IncompleateInputExeption e) {
 			response.setStatus(400);
 			response.getWriter().print("Incompleate data: " + e.getMessage());
-		} catch (IncorrectInputException e) {
-			response.setStatus(400);
-			response.getWriter().print("Incorrect data: " + e.getMessage());
-		} catch (InconsistentInputException e) {
-			response.setStatus(400);
-			response.getWriter().print("Inconsistent data: " + e.getMessage());
 		} catch (NoDataInRepository e) {
 			response.setStatus(404);
 			response.getWriter().print("There is no director with this ID");
@@ -146,22 +125,18 @@ public class DirectorServlet extends HttpServlet {
 
 		boolean resultStatus = directorService.deleteDirector(directorId);
 		if (resultStatus) {
+			response.setStatus(200);
 			response.getWriter().printf("Director with id %d has been deleted", directorId);
 		} else {
 			response.setStatus(404);
 			response.getWriter().print("There is no director with this ID");
 		}
-
 	}
 
 	@Override
 	public void init() throws ServletException {
 		super.init();
 		directorService = new DirectorServiceImpl();
-	}
-
-	public DirectorService getDirectorService() {
-		return directorService;
 	}
 
 	public void setDirectorService(DirectorService directorService) {
@@ -186,8 +161,9 @@ public class DirectorServlet extends HttpServlet {
 			response.getWriter().print("There is no director with this ID");
 			return;
 		}
-		response.setContentType("application/json");
-		response.getWriter().print(optionalDirector.get().toJsonRepresentation());
+		response.setContentType(JSON_MIME);
+		objectMapper.writeValue(response.getWriter(), optionalDirector.get());
+//		response.getWriter().print(objectMapper.writeValueAsString(optionalDirector.get()));
 	}
 
 }

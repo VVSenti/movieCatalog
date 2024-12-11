@@ -3,6 +3,7 @@ package ru.sentyurin.repository;
 import java.util.HashMap;
 import java.util.Map;
 
+import ru.sentyurin.db.ConnectionManager;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.model.Movie;
 
@@ -24,4 +25,10 @@ public class RepositoryFactory {
 	public static Repository<?, ?> getRepository(Class<?> clazz) {
 		return map.get(clazz);
 	}
+	
+	public static void setConnectionManager(ConnectionManager connectionManager) {
+		map.values().forEach(v -> v.setConnectionManager(connectionManager));
+		map.values().forEach(Repository::initDb);
+	}
+	
 }

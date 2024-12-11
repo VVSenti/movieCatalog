@@ -1,11 +1,5 @@
 package ru.sentyurin.servlet.dto;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import ru.sentyurin.model.Director;
-import ru.sentyurin.model.Movie;
-
 public class MovieIncomingDto {
 	private Integer id;
 	private String title;
@@ -13,15 +7,16 @@ public class MovieIncomingDto {
 	private Integer directorId;
 	private String directorName;
 
-	/**
-	 * makes MovieIncomingDto instance from JSON string
-	 * 
-	 * @param json string
-	 * @return
-	 * @throws JsonProcessingException
-	 */
-	public static MovieIncomingDto from(String json) throws JsonProcessingException {
-		return new ObjectMapper().readValue(json, MovieIncomingDto.class);
+	public MovieIncomingDto() {
+	}
+
+	public MovieIncomingDto(Integer id, String title, Integer releaseYear, Integer directorId,
+			String directorName) {
+		this.id = id;
+		this.title = title;
+		this.releaseYear = releaseYear;
+		this.directorId = directorId;
+		this.directorName = directorName;
 	}
 
 	public Integer getId() {
@@ -49,36 +44,19 @@ public class MovieIncomingDto {
 		return this;
 	}
 
-	public MovieIncomingDto setId(Integer id) {
+	public void setId(Integer id) {
 		this.id = id;
-		return this;
 	}
 
-	public MovieIncomingDto setReleaseYear(Integer releaseYear) {
+	public void setReleaseYear(Integer releaseYear) {
 		this.releaseYear = releaseYear;
-		return this;
 	}
 
-	public MovieIncomingDto setDirectorId(Integer directorId) {
+	public void setDirectorId(Integer directorId) {
 		this.directorId = directorId;
-		return this;
 	}
 
-	public MovieIncomingDto setDirectorName(String directorName) {
+	public void setDirectorName(String directorName) {
 		this.directorName = directorName;
-		return this;
 	}
-	
-	public Movie toMovie() {
-		Director director = new Director();
-		director.setId(directorId);
-		director.setName(directorName);
-		Movie movie = new Movie();
-		movie.setId(id);
-		movie.setTitle(title);
-		movie.setReleaseYear(releaseYear);
-		movie.setDirector(director);
-		return movie;
-	}
-	
 }

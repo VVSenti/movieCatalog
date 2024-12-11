@@ -1,13 +1,5 @@
 package ru.sentyurin.servlet.dto;
 
-import java.util.Objects;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import ru.sentyurin.model.Director;
-import ru.sentyurin.model.Movie;
-
 public class MovieOutgoingDto {
 
 	private Integer id;
@@ -15,21 +7,6 @@ public class MovieOutgoingDto {
 	private Integer releaseYear;
 	private Integer directorId;
 	private String directorName;
-
-	public MovieOutgoingDto() {
-	}
-	
-	public MovieOutgoingDto(Movie movie) {
-		Objects.requireNonNull(movie);
-		id = movie.getId();
-		title = movie.getTitle();
-		releaseYear = movie.getReleaseYear();
-		Director director = movie.getDirector();
-		if (director != null) {
-			directorId = director.getId();
-			directorName = director.getName();
-		}
-	}
 
 	public Integer getId() {
 		return id;
@@ -75,10 +52,4 @@ public class MovieOutgoingDto {
 		this.directorName = directorName;
 		return this;
 	}
-
-	public String toJsonRepresentation() throws JsonProcessingException {
-		ObjectMapper mapper = new ObjectMapper();
-		return mapper.writeValueAsString(this);
-	}
-
 }
