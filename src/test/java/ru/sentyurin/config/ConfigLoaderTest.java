@@ -9,7 +9,7 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class ConfigLoaderTest {
+class ConfigLoaderTest {
 	
 	private Map<String, String> expectedPropertyValues;
 	

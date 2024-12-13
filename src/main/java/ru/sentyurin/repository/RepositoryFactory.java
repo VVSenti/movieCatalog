@@ -21,14 +21,24 @@ public class RepositoryFactory {
 
 	private RepositoryFactory() {
 	}
-
-	public static Repository<?, ?> getRepository(Class<?> clazz) {
-		return map.get(clazz);
-	}
 	
+	/**
+	 * Returns a repository with requested entity and ID types
+	 * 
+	 * @param <T> 
+	 * @param <K> 
+	 * @param valueClass Class of enity in repository
+	 * @param keyClass Class of ID in repository
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T, K> Repository<T, K> getRepository(Class<T> valueClass, Class<K> keyClass) {
+		return (Repository<T, K>) map.get(valueClass);
+	}
+
 	public static void setConnectionManager(ConnectionManager connectionManager) {
 		map.values().forEach(v -> v.setConnectionManager(connectionManager));
 		map.values().forEach(Repository::initDb);
 	}
-	
+
 }

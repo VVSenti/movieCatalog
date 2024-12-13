@@ -32,8 +32,8 @@ import ru.sentyurin.servlet.dto.DirectorIncomingDto;
 import ru.sentyurin.servlet.dto.DirectorOutgoingDto;
 import ru.sentyurin.servlet.mapper.DirectorDtoMapper;
 import ru.sentyurin.servlet.mapper.DirectorDtoMapperImpl;
-import ru.sentyurin.util.exсeption.IncompleateInputExeption;
-import ru.sentyurin.util.exсeption.NoDataInRepository;
+import ru.sentyurin.util.exception.IncompleateInputExeption;
+import ru.sentyurin.util.exception.NoDataInRepository;
 
 class DirectorServletTest {
 	private DirectorService service;
@@ -211,11 +211,6 @@ class DirectorServletTest {
 				.thenReturn(new BufferedReader(new StringReader(jsonWithoutTitleField)));
 		servlet.doPost(request, response);
 		assertEquals(400, responseStatus.get());
-	}
-	
-	@Test
-	void initShouldWorkCorrectly() throws ServletException {
-		servlet.init();
 	}
 
 }

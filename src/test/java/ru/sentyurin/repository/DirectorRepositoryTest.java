@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 import ru.sentyurin.model.Director;
-import ru.sentyurin.util.exсeption.NoDataInRepository;
+import ru.sentyurin.util.exception.NoDataInRepository;
 
 class DirectorRepositoryTest {
 
@@ -39,7 +39,7 @@ class DirectorRepositoryTest {
 	void init() {
 		connectionManager = new DBConnectionProvider(postgres.getJdbcUrl(), postgres.getUsername(),
 				postgres.getPassword());
-		directorRepository = (DirectorRepository) RepositoryFactory.getRepository(Director.class);
+		directorRepository = (DirectorRepository) RepositoryFactory.getRepository(Director.class, Integer.class);
 		RepositoryFactory.setConnectionManager(connectionManager);
 	}
 

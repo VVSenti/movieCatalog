@@ -11,7 +11,7 @@ import ru.sentyurin.db.ConnectionManager;
 import ru.sentyurin.db.ConnectionToDbManager;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.repository.mapper.DirectorResultSetMapper;
-import ru.sentyurin.util.exсeption.NoDataInRepository;
+import ru.sentyurin.util.exception.NoDataInRepository;
 
 public class DirectorRepository implements Repository<Director, Integer> {
 
@@ -163,9 +163,6 @@ public class DirectorRepository implements Repository<Director, Integer> {
 			ResultSet resultSet = statement.executeQuery();
 			List<Director> directors = resultSetMapper.map(resultSet);
 			return directors.isEmpty() ? Optional.empty() : Optional.of(directors.getFirst());
-//			if (directors.isEmpty())
-//				return Optional.empty();
-//			return Optional.of(directors.getFirst());
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}

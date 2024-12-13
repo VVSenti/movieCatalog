@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Optional;
 
 import ru.sentyurin.model.Movie;
-import ru.sentyurin.repository.MovieRepository;
 import ru.sentyurin.repository.Repository;
 import ru.sentyurin.repository.RepositoryFactory;
 import ru.sentyurin.service.MovieService;
@@ -12,18 +11,16 @@ import ru.sentyurin.servlet.dto.MovieIncomingDto;
 import ru.sentyurin.servlet.dto.MovieOutgoingDto;
 import ru.sentyurin.servlet.mapper.MovieDtoMapper;
 import ru.sentyurin.servlet.mapper.MovieDtoMapperImpl;
-import ru.sentyurin.util.exсeption.IncompleateInputExeption;
-import ru.sentyurin.util.exсeption.IncorrectInputException;
-import ru.sentyurin.util.exсeption.NoDataInRepository;
+import ru.sentyurin.util.exception.IncompleateInputExeption;
+import ru.sentyurin.util.exception.IncorrectInputException;
 
 public class MovieServiceImpl implements MovieService {
 
 	private Repository<Movie, Integer> movieRepository;
 	private final MovieDtoMapper dtoMapper;
 
-	@SuppressWarnings("unchecked")
 	public MovieServiceImpl() {
-		movieRepository = (Repository<Movie, Integer>) RepositoryFactory.getRepository(Movie.class);
+		movieRepository = RepositoryFactory.getRepository(Movie.class, Integer.class);
 		dtoMapper = new MovieDtoMapperImpl();
 	}
 

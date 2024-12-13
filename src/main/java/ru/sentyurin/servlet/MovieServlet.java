@@ -17,10 +17,10 @@ import ru.sentyurin.service.MovieService;
 import ru.sentyurin.service.impl.MovieServiceImpl;
 import ru.sentyurin.servlet.dto.MovieIncomingDto;
 import ru.sentyurin.servlet.dto.MovieOutgoingDto;
-import ru.sentyurin.util.exсeption.IncompleateInputExeption;
-import ru.sentyurin.util.exсeption.InconsistentInputException;
-import ru.sentyurin.util.exсeption.IncorrectInputException;
-import ru.sentyurin.util.exсeption.NoDataInRepository;
+import ru.sentyurin.util.exception.IncompleateInputExeption;
+import ru.sentyurin.util.exception.InconsistentInputException;
+import ru.sentyurin.util.exception.IncorrectInputException;
+import ru.sentyurin.util.exception.NoDataInRepository;
 
 /**
  * Servlet implementation class BooksController

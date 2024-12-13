@@ -13,18 +13,13 @@ import org.mockito.Mockito;
 
 import ru.sentyurin.model.Director;
 import ru.sentyurin.model.Movie;
-import ru.sentyurin.repository.DirectorRepository;
 import ru.sentyurin.repository.MovieRepository;
-import ru.sentyurin.service.impl.DirectorServiceImpl;
 import ru.sentyurin.service.impl.MovieServiceImpl;
-import ru.sentyurin.servlet.dto.DirectorIncomingDto;
-import ru.sentyurin.servlet.dto.DirectorOutgoingDto;
 import ru.sentyurin.servlet.dto.MovieIncomingDto;
 import ru.sentyurin.servlet.dto.MovieOutgoingDto;
-import ru.sentyurin.servlet.mapper.DirectorDtoMapperImpl;
 import ru.sentyurin.servlet.mapper.MovieDtoMapperImpl;
-import ru.sentyurin.util.exсeption.IncompleateInputExeption;
-import ru.sentyurin.util.exсeption.IncorrectInputException;
+import ru.sentyurin.util.exception.IncompleateInputExeption;
+import ru.sentyurin.util.exception.IncorrectInputException;
 
 class MovieServiceImplTest {
 

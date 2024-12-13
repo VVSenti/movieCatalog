@@ -17,7 +17,7 @@ import ru.sentyurin.service.impl.DirectorServiceImpl;
 import ru.sentyurin.servlet.dto.DirectorIncomingDto;
 import ru.sentyurin.servlet.dto.DirectorOutgoingDto;
 import ru.sentyurin.servlet.mapper.DirectorDtoMapperImpl;
-import ru.sentyurin.util.exсeption.IncompleateInputExeption;
+import ru.sentyurin.util.exception.IncompleateInputExeption;
 
 class DirectorServiceImplTest {
 

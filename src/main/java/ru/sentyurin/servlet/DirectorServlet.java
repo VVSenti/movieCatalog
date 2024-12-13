@@ -17,8 +17,8 @@ import ru.sentyurin.service.DirectorService;
 import ru.sentyurin.service.impl.DirectorServiceImpl;
 import ru.sentyurin.servlet.dto.DirectorIncomingDto;
 import ru.sentyurin.servlet.dto.DirectorOutgoingDto;
-import ru.sentyurin.util.exсeption.IncompleateInputExeption;
-import ru.sentyurin.util.exсeption.NoDataInRepository;
+import ru.sentyurin.util.exception.IncompleateInputExeption;
+import ru.sentyurin.util.exception.NoDataInRepository;
 
 /**
  * Servlet implementation class BooksController
@@ -28,6 +28,7 @@ public class DirectorServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
 	private static final String JSON_MIME = "application/json";
+	private static final String NO_DIRECTOR_WITH_ID_MSG = "There is no director with this ID";
 	private final ObjectMapper objectMapper;
 	private DirectorService directorService;
 
@@ -83,8 +84,8 @@ public class DirectorServlet extends HttpServlet {
 	@Override
 	protected void doPut(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		String json = request.getReader().lines().collect(Collectors.joining("\n"));
 		try {
+			String json = request.getReader().lines().collect(Collectors.joining("\n"));
 			DirectorIncomingDto incomingDto = objectMapper.readValue(json, DirectorIncomingDto.class);
 			DirectorOutgoingDto director = directorService.updateDirector(incomingDto);
 			response.setContentType(JSON_MIME);
@@ -97,8 +98,8 @@ public class DirectorServlet extends HttpServlet {
 			response.getWriter().print("Incompleate data: " + e.getMessage());
 		} catch (NoDataInRepository e) {
 			response.setStatus(404);
-			response.getWriter().print("There is no director with this ID");
-		}
+			response.getWriter().print(NO_DIRECTOR_WITH_ID_MSG);
+		} 
 	}
 
 	/**
@@ -129,7 +130,7 @@ public class DirectorServlet extends HttpServlet {
 			response.getWriter().printf("Director with id %d has been deleted", directorId);
 		} else {
 			response.setStatus(404);
-			response.getWriter().print("There is no director with this ID");
+			response.getWriter().print(NO_DIRECTOR_WITH_ID_MSG);
 		}
 	}
 
@@ -158,12 +159,11 @@ public class DirectorServlet extends HttpServlet {
 		Optional<DirectorOutgoingDto> optionalDirector = directorService.getDirectorById(directorId);
 		if (optionalDirector.isEmpty()) {
 			response.setStatus(404);
-			response.getWriter().print("There is no director with this ID");
+			response.getWriter().print(NO_DIRECTOR_WITH_ID_MSG);
 			return;
 		}
 		response.setContentType(JSON_MIME);
 		objectMapper.writeValue(response.getWriter(), optionalDirector.get());
-//		response.getWriter().print(objectMapper.writeValueAsString(optionalDirector.get()));
 	}
 
 }

@@ -1,4 +1,4 @@
-package ru.sentyurin.util.exсeption;
+package ru.sentyurin.util.exception;
 
 public class InconsistentInputException extends RuntimeException {
 	private static final long serialVersionUID = 1L;

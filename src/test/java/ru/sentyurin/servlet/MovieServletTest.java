@@ -5,10 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +19,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.platform.commons.annotation.Testable;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -36,13 +33,11 @@ import ru.sentyurin.servlet.dto.MovieIncomingDto;
 import ru.sentyurin.servlet.dto.MovieOutgoingDto;
 import ru.sentyurin.servlet.mapper.MovieDtoMapper;
 import ru.sentyurin.servlet.mapper.MovieDtoMapperImpl;
-import ru.sentyurin.util.exсeption.IncompleateInputExeption;
-import ru.sentyurin.util.exсeption.IncorrectInputException;
-import ru.sentyurin.util.exсeption.NoDataInRepository;
+import ru.sentyurin.util.exception.IncompleateInputExeption;
+import ru.sentyurin.util.exception.IncorrectInputException;
+import ru.sentyurin.util.exception.NoDataInRepository;
 
 class MovieServletTest {
-
-	private MovieDtoMapper dtoMapper;
 
 	private MovieService service;
 	private MovieServlet servlet;
@@ -55,7 +50,6 @@ class MovieServletTest {
 
 	@BeforeEach
 	void init() throws IOException {
-		dtoMapper = new MovieDtoMapperImpl();
 
 		servlet = new MovieServlet();
 		service = new MovieServiceMock();
@@ -267,11 +261,6 @@ class MovieServletTest {
 				.thenReturn(new BufferedReader(new StringReader(jsonWithoutTitleField)));
 		servlet.doPost(request, response);
 		assertEquals(400, responseStatus.get());
-	}
-	
-	@Test
-	void initShouldWorkCorrectly() throws ServletException {
-		servlet.init();
 	}
 
 }

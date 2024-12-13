@@ -6,9 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,12 +15,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
 
-import ru.sentyurin.db.ConnectionManager;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.model.Movie;
-import ru.sentyurin.util.exсeption.InconsistentInputException;
-import ru.sentyurin.util.exсeption.IncorrectInputException;
-import ru.sentyurin.util.exсeption.NoDataInRepository;
+import ru.sentyurin.util.exception.InconsistentInputException;
+import ru.sentyurin.util.exception.IncorrectInputException;
+import ru.sentyurin.util.exception.NoDataInRepository;
 
 class MovieRepositoryTest {
 
@@ -46,7 +42,7 @@ class MovieRepositoryTest {
 	void init() {
 		connectionManager = new DBConnectionProvider(postgres.getJdbcUrl(),
 				postgres.getUsername(), postgres.getPassword());
-		movieRepository = (MovieRepository) RepositoryFactory.getRepository(Movie.class);
+		movieRepository = (MovieRepository) RepositoryFactory.getRepository(Movie.class, Integer.class);
 		RepositoryFactory.setConnectionManager(connectionManager);
 	}
 

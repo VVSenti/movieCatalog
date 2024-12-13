@@ -1,4 +1,4 @@
-package ru.sentyurin.util.exсeption;
+package ru.sentyurin.util.exception;
 
 public class IncompleateInputExeption extends RuntimeException {
 

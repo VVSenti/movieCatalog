@@ -12,9 +12,9 @@ import ru.sentyurin.db.ConnectionToDbManager;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.model.Movie;
 import ru.sentyurin.repository.mapper.MovieResultSetMapper;
-import ru.sentyurin.util.exсeption.InconsistentInputException;
-import ru.sentyurin.util.exсeption.IncorrectInputException;
-import ru.sentyurin.util.exсeption.NoDataInRepository;
+import ru.sentyurin.util.exception.InconsistentInputException;
+import ru.sentyurin.util.exception.IncorrectInputException;
+import ru.sentyurin.util.exception.NoDataInRepository;
 
 public class MovieRepository implements Repository<Movie, Integer> {
 

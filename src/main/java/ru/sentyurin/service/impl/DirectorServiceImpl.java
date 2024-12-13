@@ -11,17 +11,15 @@ import ru.sentyurin.servlet.dto.DirectorIncomingDto;
 import ru.sentyurin.servlet.dto.DirectorOutgoingDto;
 import ru.sentyurin.servlet.mapper.DirectorDtoMapper;
 import ru.sentyurin.servlet.mapper.DirectorDtoMapperImpl;
-import ru.sentyurin.util.exсeption.IncompleateInputExeption;
+import ru.sentyurin.util.exception.IncompleateInputExeption;
 
 public class DirectorServiceImpl implements DirectorService {
 
 	private Repository<Director, Integer> directorRepository;
 	private final DirectorDtoMapper dtoMapper;
 
-	@SuppressWarnings("unchecked")
 	public DirectorServiceImpl() {
-		directorRepository = (Repository<Director, Integer>) RepositoryFactory
-				.getRepository(Director.class);
+		directorRepository = RepositoryFactory.getRepository(Director.class, Integer.class);
 		dtoMapper = new DirectorDtoMapperImpl();
 	}
 
