@@ -104,6 +104,22 @@ class MovieRepositoryTest {
 		assertEquals(movieToUpdate.getTitle(), foundMovie.getTitle());
 		assertEquals(movieToUpdate.getReleaseYear(), foundMovie.getReleaseYear());
 	}
+	
+	@Test
+	void shouldUpdateMovieIfInputContainsDirectorNameButNoDirectorId() {
+		Director director = new Director(null, "Quentin Tarantino", null);
+		movieRepository.save(new Movie(null, "Reservoir dogs", 1992, director));
+		List<Movie> movies = movieRepository.findAll();
+		Movie movieToUpdate = movies.stream().filter(d -> "Reservoir dogs".equals(d.getTitle()))
+				.findFirst().get();
+		movieToUpdate.setTitle("Django Unchained");
+		movieToUpdate.setReleaseYear(2012);
+		movieToUpdate.getDirector().setId(null);
+		movieRepository.update(movieToUpdate);
+		Movie foundMovie = movieRepository.findById(movieToUpdate.getId()).get();
+		assertEquals(movieToUpdate.getTitle(), foundMovie.getTitle());
+		assertEquals(movieToUpdate.getReleaseYear(), foundMovie.getReleaseYear());
+	}
 
 	@Test
 	void shouldThrowExceptionIfUpdateWithInvalidId() {
@@ -111,6 +127,30 @@ class MovieRepositoryTest {
 		Movie movieToUpdateWithInvalidId = new Movie(0, "Reservoir dogs", 1992, director);
 		assertThrows(NoDataInRepository.class,
 				() -> movieRepository.update(movieToUpdateWithInvalidId));
+	}
+	
+	// If director ID is specified, the specified director name should be correct
+	// in another word, the director with the specified ID must have the specified name
+	@Test
+	void shouldThrowExceptionIfUpdateWithInconsistentIdOfDirector() {
+		Director director = new Director(null, "Quentin Tarantino", null);
+		movieRepository.save(new Movie(null, "Reservoir dogs", 1992, director));
+		List<Movie> movies = movieRepository.findAll();
+		Movie movieToUpdate = movies.stream().filter(d -> "Reservoir dogs".equals(d.getTitle()))
+				.findFirst().get();
+		
+		// we need another director in DB, so we add another one film with anoter director to use their ID
+		// we cannot use just random ID because in this case we can get NoDataInRepository
+		Director director2 = new Director(null, "Christopher Nolan", null);
+		movieRepository.save(new Movie(null, "Tenet", 2020, director2));
+		movies = movieRepository.findAll();
+		Movie movieWithAnotherDirector = movies.stream().filter(d -> "Tenet".equals(d.getTitle()))
+				.findFirst().get();
+		
+		// we change the director ID but not the name, so we get an inconsistent input data
+		movieToUpdate.getDirector().setId(movieWithAnotherDirector.getDirector().getId());
+		assertThrows(InconsistentInputException.class,
+				() -> movieRepository.update(movieToUpdate));
 	}
 	
 	@Test
