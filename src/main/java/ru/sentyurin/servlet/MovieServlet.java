@@ -1,6 +1,7 @@
 package ru.sentyurin.servlet;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -30,9 +31,11 @@ public class MovieServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private static final String JSON_MIME = "application/json";
 	private static final String NOT_FOUND_BY_ID_MSG = "There is no movie with this ID";
+	private static final String MUST_BE_ID_IN_PATH_VAR = "There must be path variable \"id\"";
+	private static final String ID_FORMAT_ERROR = "Incorrect \"id\" path variable format";
 
-	private MovieService movieService;
 	private final ObjectMapper objectMapper;
+	private MovieService movieService;
 
 	/**
 	 * @see HttpServlet#HttpServlet()
@@ -40,6 +43,7 @@ public class MovieServlet extends HttpServlet {
 	public MovieServlet() {
 		super();
 		objectMapper = new ObjectMapper();
+		movieService = new MovieServiceImpl();
 	}
 
 	/**
@@ -93,8 +97,8 @@ public class MovieServlet extends HttpServlet {
 	@Override
 	protected void doPut(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		String json = request.getReader().lines().collect(Collectors.joining("\n"));
 		try {
+			String json = request.getReader().lines().collect(Collectors.joining("\n"));
 			MovieIncomingDto movieIncomingDto = objectMapper.readValue(json,
 					MovieIncomingDto.class);
 			MovieOutgoingDto movie = movieService.updateMovie(movieIncomingDto);
@@ -114,7 +118,7 @@ public class MovieServlet extends HttpServlet {
 			response.getWriter().print("Inconsistent data: " + e.getMessage());
 		} catch (NoDataInRepository e) {
 			response.setStatus(404);
-			response.getWriter().print(NOT_FOUND_BY_ID_MSG);
+			response.getWriter().print(e.getMessage());
 		}
 	}
 
@@ -124,21 +128,9 @@ public class MovieServlet extends HttpServlet {
 	@Override
 	protected void doDelete(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		String movieIdAsString = request.getParameter("id");
-		if (movieIdAsString == null) {
-			response.setStatus(400);
-			response.getWriter().print("There must be path variable \"id\"");
+		Integer movieId = getIdFromPathVariableOrSetErrorInResponse(request, response);
+		if (movieId == null)
 			return;
-		}
-
-		int movieId;
-		try {
-			movieId = Integer.parseInt(request.getParameter("id"));
-		} catch (NumberFormatException e) {
-			response.setStatus(400);
-			response.getWriter().print("Incorrect \"id\" path variable format");
-			return;
-		}
 
 		boolean resultStatus = movieService.deleteMovie(movieId);
 		if (resultStatus) {
@@ -151,26 +143,15 @@ public class MovieServlet extends HttpServlet {
 
 	}
 
-	@Override
-	public void init() throws ServletException {
-		super.init();
-		movieService = new MovieServiceImpl();
-	}
-
 	public void setMovieService(MovieService movieService) {
 		this.movieService = movieService;
 	}
 
 	private void doGetById(HttpServletRequest request, HttpServletResponse response)
 			throws IOException {
-		int movieId;
-		try {
-			movieId = Integer.parseInt(request.getParameter("id"));
-		} catch (NumberFormatException e) {
-			response.setStatus(400);
-			response.getWriter().print("Incorrect \"id\" path variable format");
+		Integer movieId = getIdFromPathVariableOrSetErrorInResponse(request, response);
+		if (movieId == null)
 			return;
-		}
 
 		Optional<MovieOutgoingDto> optionalMovie = movieService.getMovieById(movieId);
 		if (optionalMovie.isEmpty()) {
@@ -183,4 +164,20 @@ public class MovieServlet extends HttpServlet {
 		response.getWriter().print(objectMapper.writeValueAsString(optionalMovie.get()));
 	}
 
+	private Integer getIdFromPathVariableOrSetErrorInResponse(HttpServletRequest request,
+			HttpServletResponse response) throws IOException {
+		Integer movieId = null;
+		try {
+			String movieIdAsString = request.getParameter("id");
+			Objects.requireNonNull(movieIdAsString);
+			movieId = Integer.parseInt(request.getParameter("id"));
+		} catch (NullPointerException e) {
+			response.setStatus(400);
+			response.getWriter().print(MUST_BE_ID_IN_PATH_VAR);
+		} catch (NumberFormatException e) {
+			response.setStatus(400);
+			response.getWriter().print(ID_FORMAT_ERROR);
+		}
+		return movieId;
+	}
 }

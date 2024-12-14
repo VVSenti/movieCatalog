@@ -23,7 +23,8 @@ public class RepositoryFactory {
 	}
 	
 	/**
-	 * Returns a repository with requested entity and ID types
+	 * Returns a repository with requested entity and ID types.
+	 * All repositories use the same ConnectionManager.
 	 * 
 	 * @param <T> 
 	 * @param <K> 
@@ -36,6 +37,10 @@ public class RepositoryFactory {
 		return (Repository<T, K>) map.get(valueClass);
 	}
 
+	/**
+	 * Sets ConnectionManager for all repositories and runs init() method for all repositories
+	 * @param connectionManager
+	 */
 	public static void setConnectionManager(ConnectionManager connectionManager) {
 		map.values().forEach(v -> v.setConnectionManager(connectionManager));
 		map.values().forEach(Repository::initDb);

@@ -8,15 +8,6 @@ public class DirectorOutgoingDto {
 	private String name;
 	private List<MovieOutgoingDto> movies;
 
-	public DirectorOutgoingDto() {
-	}
-
-	public DirectorOutgoingDto(Integer id, String name, List<MovieOutgoingDto> movies) {
-		this.id = id;
-		this.name = name;
-		this.movies = movies;
-	}
-
 	public Integer getId() {
 		return id;
 	}

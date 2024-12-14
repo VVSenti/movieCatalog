@@ -1,15 +1,14 @@
 package ru.sentyurin.servlet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -26,14 +25,11 @@ import org.mockito.stubbing.Answer;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ru.sentyurin.model.Director;
-import ru.sentyurin.model.Movie;
 import ru.sentyurin.service.MovieService;
 import ru.sentyurin.servlet.dto.MovieIncomingDto;
 import ru.sentyurin.servlet.dto.MovieOutgoingDto;
-import ru.sentyurin.servlet.mapper.MovieDtoMapper;
-import ru.sentyurin.servlet.mapper.MovieDtoMapperImpl;
 import ru.sentyurin.util.exception.IncompleateInputExeption;
+import ru.sentyurin.util.exception.InconsistentInputException;
 import ru.sentyurin.util.exception.IncorrectInputException;
 import ru.sentyurin.util.exception.NoDataInRepository;
 
@@ -43,7 +39,7 @@ class MovieServletTest {
 	private MovieServlet servlet;
 	private StringWriter responseStringWriter;
 	private PrintWriter responsePrintWriter;
-	private ObjectMapper objectMapper = new ObjectMapper();
+	private ObjectMapper objectMapper;
 	private HttpServletResponse response;
 	private AtomicInteger responseStatus;
 	private HttpServletRequest request;
@@ -51,8 +47,10 @@ class MovieServletTest {
 	@BeforeEach
 	void init() throws IOException {
 
+		objectMapper = new ObjectMapper();
+
 		servlet = new MovieServlet();
-		service = new MovieServiceMock();
+		service = Mockito.mock(MovieService.class);
 		servlet.setMovieService(service);
 
 		response = Mockito.mock(HttpServletResponse.class);
@@ -72,29 +70,29 @@ class MovieServletTest {
 
 	@Test
 	void shouldReturnAllMovies() throws ServletException, IOException {
-		Mockito.when(request.getParameter("id")).thenReturn(null);
+		List<MovieOutgoingDto> moviesOutgoingDtos = List.of(new MovieOutgoingDto(),
+				new MovieOutgoingDto());
+		Mockito.when(service.getMovies()).thenReturn(moviesOutgoingDtos);
 
+		Mockito.when(request.getParameter("id")).thenReturn(null);
 		servlet.doGet(request, response);
 		List<MovieOutgoingDto> movieDtos = objectMapper.readValue(responseStringWriter.toString(),
 				new TypeReference<List<MovieOutgoingDto>>() {
 				});
 
-		assertEquals(service.getMovies().size(), movieDtos.size());
+		assertEquals(moviesOutgoingDtos.size(), movieDtos.size());
 	}
 
 	@Test
 	void shouldReturnMovieById() throws ServletException, IOException {
-		int movieIdToGet = 2;
-		Mockito.when(request.getParameter("id")).thenReturn(movieIdToGet + "");
+		Integer movieIdToGet = 2;
+		Mockito.when(request.getParameter("id")).thenReturn(movieIdToGet.toString());
+		Mockito.when(service.getMovieById(movieIdToGet)).thenReturn(Optional.of(new MovieOutgoingDto()));
+
 		servlet.doGet(request, response);
 		MovieOutgoingDto movieDto = objectMapper.readValue(responseStringWriter.toString(),
 				MovieOutgoingDto.class);
-		MovieOutgoingDto expectedMovie = service.getMovieById(movieIdToGet).get();
-		assertEquals(expectedMovie.getId(), movieDto.getId());
-		assertEquals(expectedMovie.getTitle(), movieDto.getTitle());
-		assertEquals(expectedMovie.getReleaseYear(), movieDto.getReleaseYear());
-		assertEquals(expectedMovie.getDirectorId(), movieDto.getDirectorId());
-		assertEquals(expectedMovie.getDirectorName(), movieDto.getDirectorName());
+		assertNotNull(movieDto);
 	}
 
 	@Test
@@ -107,7 +105,9 @@ class MovieServletTest {
 
 	@Test
 	void shouldReturnCorrectStatusWhenGetWithInvalidId() throws ServletException, IOException {
-		Mockito.when(request.getParameter("id")).thenReturn("4");
+		Integer movieIdToGet = 2;
+		Mockito.when(request.getParameter("id")).thenReturn(movieIdToGet.toString());
+		Mockito.when(service.getMovieById(movieIdToGet)).thenReturn(Optional.empty());
 		servlet.doGet(request, response);
 		assertEquals(404, responseStatus.get());
 	}
@@ -123,14 +123,18 @@ class MovieServletTest {
 	@Test
 	void shouldReturnCorrectStatusWhenDeleteWithInvalidValue()
 			throws ServletException, IOException {
-		Mockito.when(request.getParameter("id")).thenReturn("4");
+		Integer movieIdToDelete = 2;
+		Mockito.when(request.getParameter("id")).thenReturn(movieIdToDelete.toString());
+		Mockito.when(service.deleteMovie(movieIdToDelete)).thenReturn(false);
 		servlet.doDelete(request, response);
 		assertEquals(404, responseStatus.get());
 	}
 
 	@Test
 	void shouldReturnCorrectStatusWhenDelete() throws ServletException, IOException {
-		Mockito.when(request.getParameter("id")).thenReturn("1");
+		Integer movieIdToDelete = 2;
+		Mockito.when(request.getParameter("id")).thenReturn(movieIdToDelete.toString());
+		Mockito.when(service.deleteMovie(movieIdToDelete)).thenReturn(true);
 		servlet.doDelete(request, response);
 		assertEquals(200, responseStatus.get());
 	}
@@ -145,195 +149,128 @@ class MovieServletTest {
 
 	@Test
 	void shouldWorkCorrectlyWhenPost() throws IOException, ServletException {
-		String correctJson = "{\"id\" : 4, \"title\" : \"Jackie Brown\", "
-				+ "\"releaseYear\" : 1997, \"directorName\" : \"Quentin Tarantino\"}";
-		Mockito.when(request.getReader())
-				.thenReturn(new BufferedReader(new StringReader(correctJson)));
+		String json = objectMapper.writeValueAsString(new MovieIncomingDto());
+		Mockito.when(service.createMovie(Mockito.any(MovieIncomingDto.class)))
+				.thenReturn(new MovieOutgoingDto());
+
+		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader(json)));
 		servlet.doPost(request, response);
 		assertEquals(201, responseStatus.get());
 	}
 
 	@Test
-	void shouldReturnCorrectStatusWhenPostWithInvalidReleaseYear()
+	void shouldReturnCorrectStatusWhenPostWithInvalidJsonRequestBody()
 			throws IOException, ServletException {
-		String jsonWithInvalidYear = "{\"id\" : 4, \"title\" : \"Jackie Brown\", "
-				+ "\"releaseYear\" : 1000, \"directorName\" : \"Quentin Tarantino\"}";
-		Mockito.when(request.getReader())
-				.thenReturn(new BufferedReader(new StringReader(jsonWithInvalidYear)));
+		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader("asd")));
 		servlet.doPost(request, response);
 		assertEquals(400, responseStatus.get());
 	}
 
 	@Test
-	void shouldReturnCorrectStatusWhenPostWithInvalidJsonRequestBody()
+	void shouldReturnCorrectStatusWhenPostWithIncompleateDataInput()
 			throws IOException, ServletException {
-		String jsonCorruptedDirectorNameFieldName = "{\"id\" : 4, \"title\" : \"Jackie Brown\", "
-				+ "\"releaseYear\" : 1000, \"director\" : \"Quentin Tarantino\"}";
-		Mockito.when(request.getReader()).thenReturn(
-				new BufferedReader(new StringReader(jsonCorruptedDirectorNameFieldName)));
+		String json = objectMapper.writeValueAsString(new MovieIncomingDto());
+		Mockito.when(service.createMovie(Mockito.any(MovieIncomingDto.class)))
+				.thenThrow(new IncompleateInputExeption(""));
+
+		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader(json)));
+		servlet.doPost(request, response);
+		assertEquals(400, responseStatus.get());
+	}
+
+	@Test
+	void shouldReturnCorrectStatusWhenPostWithIncorrectInput()
+			throws IOException, ServletException {
+		String json = objectMapper.writeValueAsString(new MovieIncomingDto());
+		Mockito.when(service.createMovie(Mockito.any(MovieIncomingDto.class)))
+				.thenThrow(new IncorrectInputException(""));
+
+		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader(json)));
+		servlet.doPost(request, response);
+		assertEquals(400, responseStatus.get());
+	}
+
+	@Test
+	void shouldReturnCorrectStatusWhenPostWithInconsistentDataInput()
+			throws IOException, ServletException {
+		String json = objectMapper.writeValueAsString(new MovieIncomingDto());
+		Mockito.when(service.createMovie(Mockito.any(MovieIncomingDto.class)))
+				.thenThrow(new InconsistentInputException(""));
+
+		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader(json)));
 		servlet.doPost(request, response);
 		assertEquals(400, responseStatus.get());
 	}
 
 	@Test
 	void shouldCorrectlyUpdateMovieById() throws ServletException, IOException {
-		int movieIdToUpdate = 2;
-		MovieOutgoingDto updatedMovie = service.getMovieById(movieIdToUpdate).get();
-		updatedMovie.setTitle("NewTitle");
-		updatedMovie.setReleaseYear(2000);
+		String json = objectMapper.writeValueAsString(new MovieIncomingDto());
+		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader(json)));
 
-		ObjectMapper objectMapperToJson = new ObjectMapper();
-		Mockito.when(request.getReader()).thenReturn(new BufferedReader(
-				new StringReader(objectMapperToJson.writeValueAsString(updatedMovie))));
-
-		Mockito.when(request.getParameter("id")).thenReturn(movieIdToUpdate + "");
+		Integer movieIdToUpdate = 2;
+		Mockito.when(request.getParameter("id")).thenReturn(movieIdToUpdate.toString());
+		Mockito.when(service.updateMovie(Mockito.any(MovieIncomingDto.class)))
+				.thenReturn(new MovieOutgoingDto());
 		servlet.doPut(request, response);
 		MovieOutgoingDto movieDto = objectMapper.readValue(responseStringWriter.toString(),
 				MovieOutgoingDto.class);
-		assertEquals(updatedMovie.getId(), movieDto.getId());
-		assertEquals(updatedMovie.getTitle(), movieDto.getTitle());
-		assertEquals(updatedMovie.getReleaseYear(), movieDto.getReleaseYear());
-		assertEquals(updatedMovie.getDirectorId(), movieDto.getDirectorId());
-		assertEquals(updatedMovie.getDirectorName(), movieDto.getDirectorName());
+		assertNotNull(movieDto);
 	}
 
 	@Test
-	void shouldReturnCorrectStatusWhenPutWithInvalidReleaseYear()
+	void shouldReturnCorrectStatusWhenUpdateWithIncorrectDataInput()
 			throws IOException, ServletException {
-		String jsonWithInvalidYear = "{\"id\" : 4, \"title\" : \"Jackie Brown\", "
-				+ "\"releaseYear\" : 1000, \"directorName\" : \"Quentin Tarantino\"}";
-		Mockito.when(request.getReader())
-				.thenReturn(new BufferedReader(new StringReader(jsonWithInvalidYear)));
+		String json = objectMapper.writeValueAsString(new MovieIncomingDto());
+		Mockito.when(service.updateMovie(Mockito.any(MovieIncomingDto.class)))
+				.thenThrow(new IncorrectInputException(""));
+
+		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader(json)));
 		servlet.doPut(request, response);
 		assertEquals(400, responseStatus.get());
 	}
-
+	
 	@Test
-	void shouldReturnCorrectStatusWhenPutWithInvalidJsonRequestBody()
+	void shouldReturnCorrectStatusWhenUpdateWithInvalidJsonRequestBody()
 			throws IOException, ServletException {
-		String jsonCorruptedDirectorNameFieldName = "{\"id\" : 4, \"title\" : \"Jackie Brown\", "
-				+ "\"releaseYear\" : 1000, \"director\" : \"Quentin Tarantino\"}";
-		Mockito.when(request.getReader()).thenReturn(
-				new BufferedReader(new StringReader(jsonCorruptedDirectorNameFieldName)));
+		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader("asd")));
 		servlet.doPut(request, response);
 		assertEquals(400, responseStatus.get());
 	}
-
+	
 	@Test
-	void shouldReturnCorrectStatusWhenPutIfNoIdInJsonRequestBody()
+	void shouldReturnCorrectStatusWhenUpdateWithIncompleateDataInput()
 			throws IOException, ServletException {
-		String jsonWithoutIdField = "{\"title\" : \"Jackie Brown\", "
-				+ "\"releaseYear\" : 1992, \"directorName\" : \"Quentin Tarantino\"}";
-		Mockito.when(request.getReader())
-				.thenReturn(new BufferedReader(new StringReader(jsonWithoutIdField)));
+		String json = objectMapper.writeValueAsString(new MovieIncomingDto());
+		Mockito.when(service.updateMovie(Mockito.any(MovieIncomingDto.class)))
+				.thenThrow(new IncompleateInputExeption(""));
+
+		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader(json)));
 		servlet.doPut(request, response);
 		assertEquals(400, responseStatus.get());
 	}
-
+	
 	@Test
-	void shouldReturnCorrectStatusWhenPutWithInvalidId() throws IOException, ServletException {
-		String jsonWithoutIdField = "{\"id\" : 8, \"title\" : \"Jackie Brown\", "
-				+ "\"releaseYear\" : 1992, \"directorName\" : \"Quentin Tarantino\"}";
-		Mockito.when(request.getReader())
-				.thenReturn(new BufferedReader(new StringReader(jsonWithoutIdField)));
+	void shouldReturnCorrectStatusWhenUpdateWithInvalidId()
+			throws IOException, ServletException {
+		String json = objectMapper.writeValueAsString(new MovieIncomingDto());
+		Mockito.when(service.updateMovie(Mockito.any(MovieIncomingDto.class)))
+				.thenThrow(new NoDataInRepository(""));
+
+		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader(json)));
 		servlet.doPut(request, response);
 		assertEquals(404, responseStatus.get());
 	}
-
+	
 	@Test
-	void shouldReturnCorrectStatusWhenPutIfNoTitleInJsonRequestBody()
+	void shouldReturnCorrectStatusWhenUpdateWithInconsistentDatainput()
 			throws IOException, ServletException {
-		String jsonWithoutTitleField = "{\"id\" : 4, "
-				+ "\"releaseYear\" : 1997, \"directorName\" : \"Quentin Tarantino\"}";
-		Mockito.when(request.getReader())
-				.thenReturn(new BufferedReader(new StringReader(jsonWithoutTitleField)));
+		String json = objectMapper.writeValueAsString(new MovieIncomingDto());
+		Mockito.when(service.updateMovie(Mockito.any(MovieIncomingDto.class)))
+				.thenThrow(new InconsistentInputException(""));
+
+		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader(json)));
 		servlet.doPut(request, response);
 		assertEquals(400, responseStatus.get());
-	}
-
-	@Test
-	void shouldReturnCorrectStatusWhenPostIfNoTitleInJsonRequestBody()
-			throws IOException, ServletException {
-		String jsonWithoutTitleField = "{\"id\" : 4, "
-				+ "\"releaseYear\" : 1997, \"directorName\" : \"Quentin Tarantino\"}";
-
-		Mockito.when(request.getReader())
-				.thenReturn(new BufferedReader(new StringReader(jsonWithoutTitleField)));
-		servlet.doPost(request, response);
-		assertEquals(400, responseStatus.get());
-	}
-
-}
-
-class MovieServiceMock implements MovieService {
-
-	private Map<Integer, Movie> movies;
-	private final MovieDtoMapper dtoMapper;
-
-	public MovieServiceMock() {
-		movies = new HashMap<>();
-		Director director = new Director(1, "Quentin Tarantino", null);
-		movies.put(1, new Movie(1, "Reservoir Dogs", 1992, director));
-		movies.put(2, new Movie(2, "Pulp Fiction", 1994, director));
-		movies.put(3, new Movie(3, "Django Unchained", 2012, director));
-		dtoMapper = new MovieDtoMapperImpl();
-	}
-
-	@Override
-	public MovieOutgoingDto createMovie(MovieIncomingDto movie) {
-		movieDataValidation(movie);
-		Movie newMovie = dtoMapper.map(movie);
-		movies.put(newMovie.getId(), newMovie);
-		return dtoMapper.map(newMovie);
-	}
-
-	@Override
-	public List<MovieOutgoingDto> getMovies() {
-		return movies.values().stream().map(this::mapToOutgoingDto).toList();
-	}
-
-	@Override
-	public Optional<MovieOutgoingDto> getMovieById(int id) {
-		Movie movie = movies.get(id);
-		return movie == null ? Optional.empty() : Optional.of(mapToOutgoingDto(movie));
-	}
-
-	@Override
-	public MovieOutgoingDto updateMovie(MovieIncomingDto movie) {
-		if (movie.getId() == null)
-			throw new IncompleateInputExeption("There must be a movie ID");
-		movieDataValidation(movie);
-		Movie newMovie = mapFromIncomingDto(movie);
-		if (!movies.containsKey(newMovie.getId())) {
-			throw new NoDataInRepository("There is no movie with this ID");
-		}
-		movies.put(movie.getId(), newMovie);
-		return mapToOutgoingDto(newMovie);
-	}
-
-	@Override
-	public boolean deleteMovie(int id) {
-		return movies.remove(id) != null;
-	}
-
-	private void movieDataValidation(MovieIncomingDto movie) {
-		if (movie.getTitle() == null)
-			throw new IncompleateInputExeption("There must be a movie title");
-		if (movie.getReleaseYear() == null)
-			throw new IncompleateInputExeption("There must be a release year");
-		if (movie.getReleaseYear() < 1895)
-			throw new IncorrectInputException(
-					"A release year is less than 1895. It is unacceptably suspicious");
-		if (movie.getDirectorId() == null && movie.getDirectorName() == null)
-			throw new IncompleateInputExeption("There must be director ID or their name");
-	}
-
-	private MovieOutgoingDto mapToOutgoingDto(Movie movie) {
-		return dtoMapper.map(movie);
-	}
-
-	private Movie mapFromIncomingDto(MovieIncomingDto incomingDto) {
-		return dtoMapper.map(incomingDto);
 	}
 
 }

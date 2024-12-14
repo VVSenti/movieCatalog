@@ -66,12 +66,20 @@ public class MovieRepository implements Repository<Movie, Integer> {
 		return directorRepository;
 	}
 
+	@Override
+	public void setConnectionManager(ConnectionManager connectionManager) {
+		this.connectionManager = connectionManager;
+	}
+
 	public void setDirectorRepository(Repository<Director, Integer> directorRepository) {
 		this.directorRepository = directorRepository;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
-	public Movie save(Movie movie) throws InconsistentInputException {
+	public Movie save(Movie movie) throws InconsistentInputException, IncorrectInputException {
 		Optional<Movie> movieInDB = findByTitle(movie.getTitle());
 		if (movieInDB.isPresent()) {
 			return movieInDB.get();
@@ -101,6 +109,9 @@ public class MovieRepository implements Repository<Movie, Integer> {
 		return findByTitle(movie.getTitle()).orElseThrow();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public List<Movie> findAll() {
 		try (Connection connection = connectionManager.getConnection();
@@ -112,6 +123,9 @@ public class MovieRepository implements Repository<Movie, Integer> {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public Optional<Movie> findById(Integer id) {
 		try (Connection connection = connectionManager.getConnection();
@@ -154,32 +168,32 @@ public class MovieRepository implements Repository<Movie, Integer> {
 		if (!isPresentWithId(movie.getId())) {
 			throw new NoDataInRepository("There is no movie with this id");
 		}
+		Director director = movie.getDirector();
+		Director directorInDb = null;
+		if (director.getId() != null) {
+			directorInDb = directorRepository.findById(director.getId())
+					.orElseThrow(() -> new NoDataInRepository("There is no director with this ID"));
+		}
+		if (directorInDb != null && director.getName() != null
+				&& !directorInDb.getName().equals(director.getName())) {
+			throw new InconsistentInputException("Director with this ID has another name: "
+					+ directorInDb.getName() + ", but in input  " + director.getName());
+		}
+
+		if (director.getName() != null && director.getId() == null) {
+			director = directorRepository.save(director);
+		}
 		try (Connection connection = connectionManager.getConnection();
 				PreparedStatement statement = connection.prepareStatement(UPDATE_BY_ID_SQL);) {
 			statement.setString(1, movie.getTitle());
 			statement.setInt(2, movie.getReleaseYear());
-			statement.setInt(3, movie.getDirector().getId());
+			statement.setInt(3, director.getId());
 			statement.setInt(4, movie.getId());
 			statement.executeUpdate();
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
 		return findById(movie.getId());
-	}
-
-	private Optional<Movie> findByTitle(String title) {
-		try (Connection connection = connectionManager.getConnection();
-				PreparedStatement statement = connection
-						.prepareStatement(GET_MOVIE_BY_TITLE_SQL);) {
-			statement.setString(1, title);
-			ResultSet resultSet = statement.executeQuery();
-			List<Movie> movies = resultSetMapper.map(resultSet);
-			if (movies.isEmpty())
-				return Optional.empty();
-			return Optional.of(movies.getFirst());
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
 	}
 
 	@Override
@@ -219,9 +233,18 @@ public class MovieRepository implements Repository<Movie, Integer> {
 		}
 	}
 
-	@Override
-	public void setConnectionManager(ConnectionManager connectionManager) {
-		this.connectionManager = connectionManager;
-
+	private Optional<Movie> findByTitle(String title) {
+		try (Connection connection = connectionManager.getConnection();
+				PreparedStatement statement = connection
+						.prepareStatement(GET_MOVIE_BY_TITLE_SQL);) {
+			statement.setString(1, title);
+			ResultSet resultSet = statement.executeQuery();
+			List<Movie> movies = resultSetMapper.map(resultSet);
+			if (movies.isEmpty())
+				return Optional.empty();
+			return Optional.of(movies.getFirst());
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

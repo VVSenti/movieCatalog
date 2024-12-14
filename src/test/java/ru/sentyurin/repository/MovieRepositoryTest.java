@@ -44,16 +44,16 @@ class MovieRepositoryTest {
 				postgres.getUsername(), postgres.getPassword());
 		movieRepository = (MovieRepository) RepositoryFactory.getRepository(Movie.class, Integer.class);
 		RepositoryFactory.setConnectionManager(connectionManager);
+		// cleans up repository before test
+		movieRepository.findAll().forEach(d -> movieRepository.deleteById(d.getId()));
 	}
 
 	@Test
 	void shouldGetMovies() {
-		List<Movie> movies = movieRepository.findAll();
-		movies.forEach(d -> movieRepository.deleteById(d.getId()));
 		Director director = new Director(null, "Quentin Tarantino", null);
 		movieRepository.save(new Movie(null, "Reservoir dogs", 1992, director));
 		movieRepository.save(new Movie(null, "Pulp Fiction", 1994, director));
-		movies = movieRepository.findAll();
+		List<Movie> movies = movieRepository.findAll();
 		assertEquals(2, movies.size());
 	}
 
@@ -64,10 +64,10 @@ class MovieRepositoryTest {
 		movieRepository.save(new Movie(null, "Pulp Fiction", 1994, director));
 		List<Movie> movies = movieRepository.findAll();
 		Movie movieToFind = movies.getFirst();
-		Movie foundDirector = movieRepository.findById(movieToFind.getId()).get();
-		assertEquals(movieToFind.getId(), foundDirector.getId());
-		assertEquals(movieToFind.getTitle(), foundDirector.getTitle());
-		assertEquals(movieToFind.getReleaseYear(), foundDirector.getReleaseYear());
+		Movie foundMovie = movieRepository.findById(movieToFind.getId()).get();
+		assertEquals(movieToFind.getId(), foundMovie.getId());
+		assertEquals(movieToFind.getTitle(), foundMovie.getTitle());
+		assertEquals(movieToFind.getReleaseYear(), foundMovie.getReleaseYear());
 	}
 
 	@Test
@@ -115,8 +115,6 @@ class MovieRepositoryTest {
 	
 	@Test
 	void shouldThrowExceptionIfSaveWithInconsistentIdOfDirector() {
-		List<Movie> movies = movieRepository.findAll();
-		movies.forEach(d -> movieRepository.deleteById(d.getId()));
 		Director director = new Director(null, "Quentin Tarantino", null);
 		movieRepository.save(new Movie(null, "Reservoir dogs", 1992, director));
 		
@@ -129,8 +127,6 @@ class MovieRepositoryTest {
 	
 	@Test
 	void shouldThrowExceptionIfSaveWithInvalidIdOfDirector() {
-		List<Movie> movies = movieRepository.findAll();
-		movies.forEach(d -> movieRepository.deleteById(d.getId()));
 		Director director = new Director(null, "Quentin Tarantino", null);
 		movieRepository.save(new Movie(null, "Reservoir dogs", 1992, director));
 		
@@ -144,12 +140,10 @@ class MovieRepositoryTest {
 	
 	@Test
 	void shouldDeleteMoviesByDirectorId() {
-		List<Movie> movies = movieRepository.findAll();
-		movies.forEach(d -> movieRepository.deleteById(d.getId()));
 		Director director = new Director(null, "Quentin Tarantino", null);
 		movieRepository.save(new Movie(null, "Reservoir dogs", 1992, director));
 		movieRepository.save(new Movie(null, "Pulp Fiction", 1994, director));
-		movies = movieRepository.findAll();
+		List<Movie> movies = movieRepository.findAll();
 		assertEquals(2, movies.size());
 		Integer directorId = movies.getFirst().getDirector().getId();
 		movieRepository.deleteByDirectorId(directorId);
@@ -159,12 +153,10 @@ class MovieRepositoryTest {
 	
 	@Test
 	void shouldReturnMoviesByDirectorId() {
-		List<Movie> movies = movieRepository.findAll();
-		movies.forEach(d -> movieRepository.deleteById(d.getId()));
 		Director director = new Director(null, "Quentin Tarantino", null);
 		movieRepository.save(new Movie(null, "Reservoir dogs", 1992, director));
 		movieRepository.save(new Movie(null, "Pulp Fiction", 1994, director));
-		movies = movieRepository.findAll();
+		List<Movie> movies = movieRepository.findAll();
 		assertEquals(2, movies.size());
 		Integer directorId = movies.getFirst().getDirector().getId();
 		movies = movieRepository.findByDirectorId(directorId);

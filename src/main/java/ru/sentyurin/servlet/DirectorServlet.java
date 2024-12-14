@@ -1,6 +1,7 @@
 package ru.sentyurin.servlet;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -25,10 +26,12 @@ import ru.sentyurin.util.exception.NoDataInRepository;
  */
 @WebServlet("/directors")
 public class DirectorServlet extends HttpServlet {
-
 	private static final long serialVersionUID = 1L;
 	private static final String JSON_MIME = "application/json";
 	private static final String NO_DIRECTOR_WITH_ID_MSG = "There is no director with this ID";
+	private static final String MUST_BE_ID_IN_PATH_VAR = "There must be path variable \"id\"";
+	private static final String ID_FORMAT_ERROR = "Incorrect \"id\" path variable format";
+
 	private final ObjectMapper objectMapper;
 	private DirectorService directorService;
 
@@ -38,6 +41,7 @@ public class DirectorServlet extends HttpServlet {
 	public DirectorServlet() {
 		super();
 		objectMapper = new ObjectMapper();
+		directorService = new DirectorServiceImpl();
 	}
 
 	/**
@@ -62,9 +66,10 @@ public class DirectorServlet extends HttpServlet {
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		String json = request.getReader().lines().collect(Collectors.joining("\n"));
 		try {
-			DirectorIncomingDto incomingDto = objectMapper.readValue(json, DirectorIncomingDto.class);
+			String json = request.getReader().lines().collect(Collectors.joining("\n"));
+			DirectorIncomingDto incomingDto = objectMapper.readValue(json,
+					DirectorIncomingDto.class);
 			DirectorOutgoingDto director = directorService.createDirector(incomingDto);
 			response.setContentType(JSON_MIME);
 			response.getWriter().print(objectMapper.writeValueAsString(director));
@@ -86,7 +91,8 @@ public class DirectorServlet extends HttpServlet {
 			throws ServletException, IOException {
 		try {
 			String json = request.getReader().lines().collect(Collectors.joining("\n"));
-			DirectorIncomingDto incomingDto = objectMapper.readValue(json, DirectorIncomingDto.class);
+			DirectorIncomingDto incomingDto = objectMapper.readValue(json,
+					DirectorIncomingDto.class);
 			DirectorOutgoingDto director = directorService.updateDirector(incomingDto);
 			response.setContentType(JSON_MIME);
 			response.getWriter().print(objectMapper.writeValueAsString(director));
@@ -99,7 +105,7 @@ public class DirectorServlet extends HttpServlet {
 		} catch (NoDataInRepository e) {
 			response.setStatus(404);
 			response.getWriter().print(NO_DIRECTOR_WITH_ID_MSG);
-		} 
+		}
 	}
 
 	/**
@@ -108,21 +114,9 @@ public class DirectorServlet extends HttpServlet {
 	@Override
 	protected void doDelete(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		String movieIdAsString = request.getParameter("id");
-		if (movieIdAsString == null) {
-			response.setStatus(400);
-			response.getWriter().print("There must be path variable \"id\"");
+		Integer directorId = getIdFromPathVariableOrSetErrorInResponse(request, response);
+		if (directorId == null)
 			return;
-		}
-
-		int directorId;
-		try {
-			directorId = Integer.parseInt(request.getParameter("id"));
-		} catch (NumberFormatException e) {
-			response.setStatus(400);
-			response.getWriter().print("Incorrect \"id\" path variable format");
-			return;
-		}
 
 		boolean resultStatus = directorService.deleteDirector(directorId);
 		if (resultStatus) {
@@ -134,29 +128,18 @@ public class DirectorServlet extends HttpServlet {
 		}
 	}
 
-	@Override
-	public void init() throws ServletException {
-		super.init();
-		directorService = new DirectorServiceImpl();
-	}
-
 	public void setDirectorService(DirectorService directorService) {
 		this.directorService = directorService;
 	}
 
 	private void doGetById(HttpServletRequest request, HttpServletResponse response)
 			throws IOException {
-
-		int directorId;
-		try {
-			directorId = Integer.parseInt(request.getParameter("id"));
-		} catch (NumberFormatException e) {
-			response.setStatus(400);
-			response.getWriter().print("Incorrect \"id\" path variable format");
+		Integer directorId = getIdFromPathVariableOrSetErrorInResponse(request, response);
+		if (directorId == null)
 			return;
-		}
 
-		Optional<DirectorOutgoingDto> optionalDirector = directorService.getDirectorById(directorId);
+		Optional<DirectorOutgoingDto> optionalDirector = directorService
+				.getDirectorById(directorId);
 		if (optionalDirector.isEmpty()) {
 			response.setStatus(404);
 			response.getWriter().print(NO_DIRECTOR_WITH_ID_MSG);
@@ -164,6 +147,23 @@ public class DirectorServlet extends HttpServlet {
 		}
 		response.setContentType(JSON_MIME);
 		objectMapper.writeValue(response.getWriter(), optionalDirector.get());
+	}
+
+	private Integer getIdFromPathVariableOrSetErrorInResponse(HttpServletRequest request,
+			HttpServletResponse response) throws IOException {
+		Integer movieId = null;
+		try {
+			String movieIdAsString = request.getParameter("id");
+			Objects.requireNonNull(movieIdAsString);
+			movieId = Integer.parseInt(request.getParameter("id"));
+		} catch (NullPointerException e) {
+			response.setStatus(400);
+			response.getWriter().print(MUST_BE_ID_IN_PATH_VAR);
+		} catch (NumberFormatException e) {
+			response.setStatus(400);
+			response.getWriter().print(ID_FORMAT_ERROR);
+		}
+		return movieId;
 	}
 
 }
