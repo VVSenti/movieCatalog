@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 import ru.sentyurin.model.Director;
-import ru.sentyurin.util.exception.NoDataInRepository;
+import ru.sentyurin.util.exception.NoDataInRepositoryException;
 
 class DirectorRepositoryTest {
 
@@ -97,7 +97,7 @@ class DirectorRepositoryTest {
 	@Test
 	void shouldThrowExceptionIfUpdateWithInvalidId() {
 		Director directorToUpdateWithInvalidId = new Director(0, "Slava", null);
-		assertThrows(NoDataInRepository.class,
+		assertThrows(NoDataInRepositoryException.class,
 				() -> directorRepository.update(directorToUpdateWithInvalidId));
 	}
 

@@ -19,7 +19,7 @@ import ru.sentyurin.service.impl.DirectorServiceImpl;
 import ru.sentyurin.servlet.dto.DirectorIncomingDto;
 import ru.sentyurin.servlet.dto.DirectorOutgoingDto;
 import ru.sentyurin.util.exception.IncompleateInputExeption;
-import ru.sentyurin.util.exception.NoDataInRepository;
+import ru.sentyurin.util.exception.NoDataInRepositoryException;
 
 /**
  * Servlet implementation class BooksController
@@ -45,8 +45,13 @@ public class DirectorServlet extends HttpServlet {
 	}
 
 	/**
+	 * Method to get JSON representation of all director entities in repository or
+	 * only one with specified ID. A value of ID should be given as path variable,
+	 * e.g /directors?id=1.
+	 * 
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse
 	 *      response)
+	 * @see DirectorOutgoingDto
 	 */
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -60,8 +65,15 @@ public class DirectorServlet extends HttpServlet {
 	}
 
 	/**
+	 * Method to create a new director entity in repository.
+	 * 
+	 * Input JSON is mapped to {@code DirectorIncomingDto}. An example of JSON in
+	 * put in HTTP body: {"name":"Quentin Tarantino"}
+	 * 
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse
 	 *      response)
+	 * @see DirectorIncomingDto
+	 * @see DirectorOutgoingDto
 	 */
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -84,8 +96,16 @@ public class DirectorServlet extends HttpServlet {
 	}
 
 	/**
-	 * @see HttpServlet#doPut(HttpServletRequest, HttpServletResponse)
-	 */
+	 * A method to update an existing director entity in repository.
+	 * 
+	 * Input JSON is mapped to {@code DirectorIncomingDto}. An example of JSON in
+	 * put in HTTP body: {"id":1, "name":"Quentin Tarantino"}.
+	 * 
+	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse
+	 *      response)
+	 * @see DirectorIncomingDto
+	 * @see DirectorOutgoingDto
+	 **/
 	@Override
 	protected void doPut(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
@@ -102,13 +122,17 @@ public class DirectorServlet extends HttpServlet {
 		} catch (IncompleateInputExeption e) {
 			response.setStatus(400);
 			response.getWriter().print("Incompleate data: " + e.getMessage());
-		} catch (NoDataInRepository e) {
+		} catch (NoDataInRepositoryException e) {
 			response.setStatus(404);
 			response.getWriter().print(NO_DIRECTOR_WITH_ID_MSG);
 		}
 	}
 
 	/**
+	 * A method to delete an existing director entity with specified ID in
+	 * repository. A value of ID should be given as path variable, e.g
+	 * /directors?id=1.
+	 * 
 	 * @see HttpServlet#doDelete(HttpServletRequest, HttpServletResponse)
 	 */
 	@Override
@@ -128,6 +152,11 @@ public class DirectorServlet extends HttpServlet {
 		}
 	}
 
+	/**
+	 * Sets {@code MovieRepository}
+	 * 
+	 * @param movieService
+	 */
 	public void setDirectorService(DirectorService directorService) {
 		this.directorService = directorService;
 	}

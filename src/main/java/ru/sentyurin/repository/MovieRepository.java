@@ -14,7 +14,7 @@ import ru.sentyurin.model.Movie;
 import ru.sentyurin.repository.mapper.MovieResultSetMapper;
 import ru.sentyurin.util.exception.InconsistentInputException;
 import ru.sentyurin.util.exception.IncorrectInputException;
-import ru.sentyurin.util.exception.NoDataInRepository;
+import ru.sentyurin.util.exception.NoDataInRepositoryException;
 
 public class MovieRepository implements Repository<Movie, Integer> {
 
@@ -58,25 +58,55 @@ public class MovieRepository implements Repository<Movie, Integer> {
 		connectionManager = new ConnectionToDbManager();
 	}
 
+	/**
+	 * Returns {@code ConnectionManager}
+	 */
 	public ConnectionManager getConnectionManager() {
 		return connectionManager;
 	}
 
+	/**
+	 * Returns a repository of director entities
+	 */
 	public Repository<Director, Integer> getDirectorRepository() {
 		return directorRepository;
 	}
 
+	/**
+	 * Sets {@code ConnectionManager}
+	 * 
+	 * @param connectionManager
+	 */
 	@Override
 	public void setConnectionManager(ConnectionManager connectionManager) {
 		this.connectionManager = connectionManager;
 	}
 
+	/**
+	 * Sets a repository of director entities
+	 * 
+	 * @param directorRepository
+	 */
 	public void setDirectorRepository(Repository<Director, Integer> directorRepository) {
 		this.directorRepository = directorRepository;
 	}
 
 	/**
-	 * {@inheritDoc}
+	 * Saves a movie entity. If there is a movie with the same {@code title} it
+	 * returns movie entity from DB.
+	 * 
+	 * There could be not null name and null id in director in {@code movie}. If
+	 * director with specified name exists in DB, it will be used. If not, new
+	 * director will be created.
+	 * 
+	 * If director in {@code movie} has both not null id and name, a director with
+	 * the same id and name values must be in DB or it @throws
+	 * InconsistentInputException.
+	 * 
+	 * If director in {@code movie} has not null id and null name, a director with
+	 * the same id must be in DB or it @throws NoDataInRepositoryException.
+	 * 
+	 * @return saved movie entity
 	 */
 	@Override
 	public Movie save(Movie movie) throws InconsistentInputException, IncorrectInputException {
@@ -94,7 +124,7 @@ public class MovieRepository implements Repository<Movie, Integer> {
 			}
 		} else {
 			directorInDB = directorRepository.findById(director.getId()).orElseThrow(
-					() -> new IncorrectInputException("There is no director with this ID"));
+					() -> new NoDataInRepositoryException("There is no director with this ID"));
 		}
 
 		try (Connection connection = connectionManager.getConnection();
@@ -106,11 +136,11 @@ public class MovieRepository implements Repository<Movie, Integer> {
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
-		return findByTitle(movie.getTitle()).orElseThrow();
+		return findByTitle(movie.getTitle()).get();
 	}
 
 	/**
-	 * {@inheritDoc}
+	 * Returns all movie entities from DB.
 	 */
 	@Override
 	public List<Movie> findAll() {
@@ -124,7 +154,7 @@ public class MovieRepository implements Repository<Movie, Integer> {
 	}
 
 	/**
-	 * {@inheritDoc}
+	 * Returns a movie entity with specified ID from DB.
 	 */
 	@Override
 	public Optional<Movie> findById(Integer id) {
@@ -141,6 +171,13 @@ public class MovieRepository implements Repository<Movie, Integer> {
 		}
 	}
 
+	/**
+	 * Deletes a movie entity with specified ID from DB
+	 * 
+	 * @param id
+	 * @return {@code true} if an entity has been deleted and {@code false} in
+	 *         another case
+	 */
 	@Override
 	public boolean deleteById(Integer id) {
 		try (Connection connection = connectionManager.getConnection();
@@ -152,6 +189,13 @@ public class MovieRepository implements Repository<Movie, Integer> {
 		}
 	}
 
+	/**
+	 * Deletes a movie with specified director ID from DB
+	 * 
+	 * @param id
+	 * @return {@code true} if an entity has been deleted and {@code false} in
+	 *         another case
+	 */
 	public boolean deleteByDirectorId(Integer id) {
 		try (Connection connection = connectionManager.getConnection();
 				PreparedStatement statement = connection
@@ -163,16 +207,40 @@ public class MovieRepository implements Repository<Movie, Integer> {
 		}
 	}
 
+	/**
+	 * Updates a movie entity with specified ID in DB.
+	 * 
+	 * There could be 3 options about director in {@code movie}.
+	 * 
+	 * 1) Director name is not null, but director ID is null. If director with this
+	 * name already exists in DB, it will be used. In another case, it will be
+	 * created and used.
+	 * 
+	 * 2) Director ID is not null, but director name is null. If director with this
+	 * ID already exists in DB, it will be used. In not, @throws
+	 * NoDataInRepositoryException
+	 * 
+	 * 3) Both director ID and name are not null. If director with specified ID and
+	 * name exists in DB, it will be used. If not, it @throws
+	 * InconsistentInputException.
+	 * 
+	 * 
+	 * @throws NoDataInRepositoryException if there is no movie entity with
+	 *                                     specified ID in DB
+	 * 
+	 * @return updated movie entity
+	 */
 	@Override
-	public Optional<Movie> update(Movie movie) throws NoDataInRepository {
+	public Optional<Movie> update(Movie movie)
+			throws NoDataInRepositoryException, InconsistentInputException {
 		if (!isPresentWithId(movie.getId())) {
-			throw new NoDataInRepository("There is no movie with this id");
+			throw new NoDataInRepositoryException("There is no movie with this id");
 		}
 		Director director = movie.getDirector();
 		Director directorInDb = null;
 		if (director.getId() != null) {
-			directorInDb = directorRepository.findById(director.getId())
-					.orElseThrow(() -> new NoDataInRepository("There is no director with this ID"));
+			directorInDb = directorRepository.findById(director.getId()).orElseThrow(
+					() -> new NoDataInRepositoryException("There is no director with this ID"));
 		}
 		if (directorInDb != null && director.getName() != null
 				&& !directorInDb.getName().equals(director.getName())) {
@@ -196,6 +264,12 @@ public class MovieRepository implements Repository<Movie, Integer> {
 		return findById(movie.getId());
 	}
 
+	/**
+	 * Checks if an entity with specified ID is persisted in DB.
+	 * 
+	 * @return {@code true} if an entity with this ID exists in DB and {@code false}
+	 *         in another case
+	 */
 	@Override
 	public boolean isPresentWithId(Integer id) {
 		try (Connection connection = connectionManager.getConnection();
@@ -208,6 +282,9 @@ public class MovieRepository implements Repository<Movie, Integer> {
 		}
 	}
 
+	/**
+	 * Returns all movie entities with specified director ID from DB.
+	 */
 	public List<Movie> findByDirectorId(Integer id) {
 		try (Connection connection = connectionManager.getConnection();
 				PreparedStatement statement = connection
@@ -218,7 +295,10 @@ public class MovieRepository implements Repository<Movie, Integer> {
 			throw new RuntimeException(e);
 		}
 	}
-
+	
+	/**
+	 * Creates a table in DB to persist movie entities if it doesn't exist yet.
+	 */
 	@Override
 	public void initDb() {
 		try (Connection connection = connectionManager.getConnection();

@@ -29,7 +29,7 @@ import ru.sentyurin.service.DirectorService;
 import ru.sentyurin.servlet.dto.DirectorIncomingDto;
 import ru.sentyurin.servlet.dto.DirectorOutgoingDto;
 import ru.sentyurin.util.exception.IncompleateInputExeption;
-import ru.sentyurin.util.exception.NoDataInRepository;
+import ru.sentyurin.util.exception.NoDataInRepositoryException;
 
 class DirectorServletTest {
 	private DirectorService service;
@@ -212,7 +212,7 @@ class DirectorServletTest {
 	void shouldReturnCorrectStatusWhenUpdateWithInvalidId() throws IOException, ServletException {
 		String json = objectMapper.writeValueAsString(new DirectorIncomingDto());
 		Mockito.when(service.updateDirector(Mockito.any(DirectorIncomingDto.class)))
-				.thenThrow(new NoDataInRepository(""));
+				.thenThrow(new NoDataInRepositoryException(""));
 
 		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader(json)));
 		servlet.doPut(request, response);

@@ -12,6 +12,7 @@ import ru.sentyurin.servlet.dto.DirectorOutgoingDto;
 import ru.sentyurin.servlet.mapper.DirectorDtoMapper;
 import ru.sentyurin.servlet.mapper.DirectorDtoMapperImpl;
 import ru.sentyurin.util.exception.IncompleateInputExeption;
+import ru.sentyurin.util.exception.IncorrectInputException;
 
 public class DirectorServiceImpl implements DirectorService {
 
@@ -23,14 +24,28 @@ public class DirectorServiceImpl implements DirectorService {
 		dtoMapper = new DirectorDtoMapperImpl();
 	}
 
+	/**
+	 * Gets a repository of director entities
+	 */
 	public Repository<Director, Integer> getDirectorRepository() {
 		return directorRepository;
 	}
 
+	/**
+	 * Sets a repository of director entities
+	 * 
+	 * @param directorRepository
+	 */
 	public void setDirectorRepository(Repository<Director, Integer> directorRepository) {
 		this.directorRepository = directorRepository;
 	}
 
+	/**
+	 * Creates new director entity in repository
+	 * 
+	 * @throws IncompleateInputExeption if field {@code name} in {@code director} is
+	 *                                  {@code null}
+	 */
 	@Override
 	public DirectorOutgoingDto createDirector(DirectorIncomingDto director)
 			throws IncompleateInputExeption {
@@ -38,11 +53,17 @@ public class DirectorServiceImpl implements DirectorService {
 		return dtoMapper.map(directorRepository.save(dtoMapper.map(director)));
 	}
 
+	/**
+	 * Returns all director entities in repository
+	 */
 	@Override
 	public List<DirectorOutgoingDto> getDirectors() {
 		return directorRepository.findAll().stream().map(this::mapToOutgoingDto).toList();
 	}
 
+	/**
+	 * Returns director entity with specified ID
+	 */
 	@Override
 	public Optional<DirectorOutgoingDto> getDirectorById(int id) {
 		Optional<Director> optionalDirector = directorRepository.findById(id);
@@ -50,6 +71,15 @@ public class DirectorServiceImpl implements DirectorService {
 				: Optional.of(mapToOutgoingDto(optionalDirector.get()));
 	}
 
+	/**
+	 * Creates new director entity in repository
+	 * 
+	 * @param director contains field {@code directorId} (ID of director entity to
+	 *                 update) and new data to persist
+	 * 
+	 * @throws IncompleateInputExeption if fields {@code id} or {@code name} in
+	 *                                  {@code director} is {@code null}
+	 */
 	@Override
 	public DirectorOutgoingDto updateDirector(DirectorIncomingDto director) {
 		if (director.getId() == null)
@@ -59,12 +89,16 @@ public class DirectorServiceImpl implements DirectorService {
 		return mapToOutgoingDto(updatedDirector);
 	}
 
+	/**
+	 * Deletes director entity from repository
+	 */
 	@Override
 	public boolean deleteDirector(int id) {
 		return directorRepository.deleteById(id);
 	}
 
-	private void directorDataValidation(DirectorIncomingDto director) {
+	private void directorDataValidation(DirectorIncomingDto director)
+			throws IncompleateInputExeption {
 		if (director.getName() == null)
 			throw new IncompleateInputExeption("There must be a director name");
 	}

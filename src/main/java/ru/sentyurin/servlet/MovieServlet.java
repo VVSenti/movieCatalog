@@ -21,7 +21,7 @@ import ru.sentyurin.servlet.dto.MovieOutgoingDto;
 import ru.sentyurin.util.exception.IncompleateInputExeption;
 import ru.sentyurin.util.exception.InconsistentInputException;
 import ru.sentyurin.util.exception.IncorrectInputException;
-import ru.sentyurin.util.exception.NoDataInRepository;
+import ru.sentyurin.util.exception.NoDataInRepositoryException;
 
 /**
  * Servlet implementation class BooksController
@@ -31,8 +31,8 @@ public class MovieServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private static final String JSON_MIME = "application/json";
 	private static final String NOT_FOUND_BY_ID_MSG = "There is no movie with this ID";
-	private static final String MUST_BE_ID_IN_PATH_VAR = "There must be path variable \"id\"";
-	private static final String ID_FORMAT_ERROR = "Incorrect \"id\" path variable format";
+	private static final String MUST_BE_ID_IN_PATH_VAR_MSG = "There must be path variable \"id\"";
+	private static final String ID_FORMAT_ERROR_MSG = "Incorrect \"id\" path variable format";
 
 	private final ObjectMapper objectMapper;
 	private MovieService movieService;
@@ -47,8 +47,13 @@ public class MovieServlet extends HttpServlet {
 	}
 
 	/**
+	 * A method to get JSON representation of all movie entities in repository or
+	 * only one with specified ID. A value of ID should be given as path variable,
+	 * e.g /movies?id=1.
+	 * 
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse
 	 *      response)
+	 * @see MovieOutgoingDto
 	 */
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -62,8 +67,16 @@ public class MovieServlet extends HttpServlet {
 	}
 
 	/**
+	 * A method to create a new movie entity in repository.
+	 * 
+	 * Input JSON is mapped to {@code MovieIncomingDto}. An example of
+	 * JSON in put in HTTP body: {"title":"Reservoir dogs", "releaseYear":1992,
+	 * "directorName":"Quentin Tarantino"}
+	 * 
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse
 	 *      response)
+	 * @see MovieIncomingDto
+	 * @see MovieOutgoingDto
 	 */
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -82,7 +95,7 @@ public class MovieServlet extends HttpServlet {
 		} catch (IncompleateInputExeption e) {
 			response.setStatus(400);
 			response.getWriter().print("Incompleate data: " + e.getMessage());
-		} catch (IncorrectInputException e) {
+		} catch (NoDataInRepositoryException e) {
 			response.setStatus(400);
 			response.getWriter().print("Incorrect data: " + e.getMessage());
 		} catch (InconsistentInputException e) {
@@ -92,8 +105,17 @@ public class MovieServlet extends HttpServlet {
 	}
 
 	/**
-	 * @see HttpServlet#doPut(HttpServletRequest, HttpServletResponse)
-	 */
+	 * A method to update an existing movie entity in repository.
+	 * 
+	 * Input JSON is be mapped to {@code MovieIncomingDto}. An example of
+	 * JSON in put in HTTP body: {"id":1, "title":"Reservoir dogs",
+	 * "releaseYear":1992, "directorId":1, "directorName":"Quentin Tarantino"}.
+	 * 
+	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse
+	 *      response)
+	 * @see MovieIncomingDto
+	 * @see MovieOutgoingDto
+	 **/
 	@Override
 	protected void doPut(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
@@ -116,13 +138,16 @@ public class MovieServlet extends HttpServlet {
 		} catch (InconsistentInputException e) {
 			response.setStatus(400);
 			response.getWriter().print("Inconsistent data: " + e.getMessage());
-		} catch (NoDataInRepository e) {
+		} catch (NoDataInRepositoryException e) {
 			response.setStatus(404);
 			response.getWriter().print(e.getMessage());
 		}
 	}
 
 	/**
+	 * A method to delete an existing movie entity with specified ID in repository.
+	 * A value of ID should be given as path variable, e.g /movies?id=1.
+	 * 
 	 * @see HttpServlet#doDelete(HttpServletRequest, HttpServletResponse)
 	 */
 	@Override
@@ -143,6 +168,11 @@ public class MovieServlet extends HttpServlet {
 
 	}
 
+	/**
+	 * Sets {@code MovieRepository}
+	 * 
+	 * @param movieService
+	 */
 	public void setMovieService(MovieService movieService) {
 		this.movieService = movieService;
 	}
@@ -173,10 +203,10 @@ public class MovieServlet extends HttpServlet {
 			movieId = Integer.parseInt(request.getParameter("id"));
 		} catch (NullPointerException e) {
 			response.setStatus(400);
-			response.getWriter().print(MUST_BE_ID_IN_PATH_VAR);
+			response.getWriter().print(MUST_BE_ID_IN_PATH_VAR_MSG);
 		} catch (NumberFormatException e) {
 			response.setStatus(400);
-			response.getWriter().print(ID_FORMAT_ERROR);
+			response.getWriter().print(ID_FORMAT_ERROR_MSG);
 		}
 		return movieId;
 	}

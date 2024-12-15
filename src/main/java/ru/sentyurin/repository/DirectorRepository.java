@@ -11,7 +11,7 @@ import ru.sentyurin.db.ConnectionManager;
 import ru.sentyurin.db.ConnectionToDbManager;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.repository.mapper.DirectorResultSetMapper;
-import ru.sentyurin.util.exception.NoDataInRepository;
+import ru.sentyurin.util.exception.NoDataInRepositoryException;
 
 public class DirectorRepository implements Repository<Director, Integer> {
 
@@ -38,22 +38,44 @@ public class DirectorRepository implements Repository<Director, Integer> {
 		connectionManager = new ConnectionToDbManager();
 	}
 
+	/**
+	 * Returns {@code ConnectionManager}
+	 */
 	public ConnectionManager getConnectionManager() {
 		return connectionManager;
 	}
 
+	/**
+	 * Sets {@code ConnectionManager}
+	 * 
+	 * @param connectionManager
+	 */
 	public void setConnectionManager(ConnectionManager connectionManager) {
 		this.connectionManager = connectionManager;
 	}
 
+	/**
+	 * Returns a repository of movie entities
+	 */
 	public MovieRepository getMovieRepository() {
 		return movieRepository;
 	}
 
+	/**
+	 * Sets a repository of movie entities
+	 * 
+	 * @param directorRepository
+	 */
 	public void setMovieRepository(MovieRepository movieRepository) {
 		this.movieRepository = movieRepository;
 	}
 
+	/**
+	 * Saves a director entity. If there is a director with the same {@code name} it
+	 * returns director entity from DB.
+	 * 
+	 * @return saved director entity
+	 */
 	@Override
 	public Director save(Director director) {
 		String directorName = director.getName();
@@ -72,6 +94,9 @@ public class DirectorRepository implements Repository<Director, Integer> {
 
 	}
 
+	/**
+	 * Returns all director entities from DB. Fields {@code movies} will be null.
+	 */
 	@Override
 	public List<Director> findAll() {
 		try (Connection connection = connectionManager.getConnection();
@@ -83,6 +108,9 @@ public class DirectorRepository implements Repository<Director, Integer> {
 		}
 	}
 
+	/**
+	 * Returns a director entity with specified ID from DB.
+	 */
 	@Override
 	public Optional<Director> findById(Integer id) {
 		try (Connection connection = connectionManager.getConnection();
@@ -100,6 +128,13 @@ public class DirectorRepository implements Repository<Director, Integer> {
 		}
 	}
 
+	/**
+	 * Deletes a director entity with specified ID from DB
+	 * 
+	 * @param id
+	 * @return {@code true} if an entity has been deleted and {@code false} in
+	 *         another case
+	 */
 	@Override
 	public boolean deleteById(Integer id) {
 		try (Connection connection = connectionManager.getConnection();
@@ -115,10 +150,18 @@ public class DirectorRepository implements Repository<Director, Integer> {
 		return true;
 	}
 
+	/**
+	 * Updates a movie entity with specified ID in DB.
+	 * 
+	 * @throws NoDataInRepositoryException if there is no director entity with
+	 *                                     specified ID in DB
+	 * 
+	 * @return updated movie entity
+	 */
 	@Override
 	public Optional<Director> update(Director director) {
 		if (!isPresentWithId(director.getId())) {
-			throw new NoDataInRepository("There is no movie with this id");
+			throw new NoDataInRepositoryException("There is no movie with this id");
 		}
 		try (Connection connection = connectionManager.getConnection();
 				PreparedStatement statement = connection.prepareStatement(UPDATE_BY_ID_SQL);) {
@@ -131,6 +174,12 @@ public class DirectorRepository implements Repository<Director, Integer> {
 		return findById(director.getId());
 	}
 
+	/**
+	 * Checks if an entity with specified ID is persisted in DB.
+	 * 
+	 * @return {@code true} if an entity with this ID exists in DB and {@code false}
+	 *         in another case
+	 */
 	@Override
 	public boolean isPresentWithId(Integer id) {
 		try (Connection connection = connectionManager.getConnection();
@@ -143,6 +192,9 @@ public class DirectorRepository implements Repository<Director, Integer> {
 		}
 	}
 
+	/**
+	 * Creates a table in DB to persist director entities if it doesn't exist yet.
+	 */
 	@Override
 	public void initDb() {
 		try (Connection connection = connectionManager.getConnection();

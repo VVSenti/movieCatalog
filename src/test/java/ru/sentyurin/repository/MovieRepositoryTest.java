@@ -19,7 +19,7 @@ import ru.sentyurin.model.Director;
 import ru.sentyurin.model.Movie;
 import ru.sentyurin.util.exception.InconsistentInputException;
 import ru.sentyurin.util.exception.IncorrectInputException;
-import ru.sentyurin.util.exception.NoDataInRepository;
+import ru.sentyurin.util.exception.NoDataInRepositoryException;
 
 class MovieRepositoryTest {
 
@@ -125,7 +125,7 @@ class MovieRepositoryTest {
 	void shouldThrowExceptionIfUpdateWithInvalidId() {
 		Director director = new Director(null, "Quentin Tarantino", null);
 		Movie movieToUpdateWithInvalidId = new Movie(0, "Reservoir dogs", 1992, director);
-		assertThrows(NoDataInRepository.class,
+		assertThrows(NoDataInRepositoryException.class,
 				() -> movieRepository.update(movieToUpdateWithInvalidId));
 	}
 	
@@ -174,7 +174,7 @@ class MovieRepositoryTest {
 		director.setName(null);
 		Movie movieToSave = new Movie(null, "Pulp Fiction", 1994, director);
 		
-		assertThrows(IncorrectInputException.class,
+		assertThrows(NoDataInRepositoryException.class,
 				() -> movieRepository.save(movieToSave));
 	}
 	

@@ -8,9 +8,6 @@ public class MovieOutgoingDto {
 	private Integer directorId;
 	private String directorName;
 
-	public MovieOutgoingDto() {
-	}
-
 	public Integer getId() {
 		return id;
 	}

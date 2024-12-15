@@ -31,7 +31,7 @@ import ru.sentyurin.servlet.dto.MovieOutgoingDto;
 import ru.sentyurin.util.exception.IncompleateInputExeption;
 import ru.sentyurin.util.exception.InconsistentInputException;
 import ru.sentyurin.util.exception.IncorrectInputException;
-import ru.sentyurin.util.exception.NoDataInRepository;
+import ru.sentyurin.util.exception.NoDataInRepositoryException;
 
 class MovieServletTest {
 
@@ -183,7 +183,7 @@ class MovieServletTest {
 			throws IOException, ServletException {
 		String json = objectMapper.writeValueAsString(new MovieIncomingDto());
 		Mockito.when(service.createMovie(Mockito.any(MovieIncomingDto.class)))
-				.thenThrow(new IncorrectInputException(""));
+				.thenThrow(new NoDataInRepositoryException(""));
 
 		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader(json)));
 		servlet.doPost(request, response);
@@ -254,7 +254,7 @@ class MovieServletTest {
 			throws IOException, ServletException {
 		String json = objectMapper.writeValueAsString(new MovieIncomingDto());
 		Mockito.when(service.updateMovie(Mockito.any(MovieIncomingDto.class)))
-				.thenThrow(new NoDataInRepository(""));
+				.thenThrow(new NoDataInRepositoryException(""));
 
 		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader(json)));
 		servlet.doPut(request, response);

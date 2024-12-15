@@ -24,26 +24,53 @@ public class MovieServiceImpl implements MovieService {
 		dtoMapper = new MovieDtoMapperImpl();
 	}
 
+	/**
+	 * Gets a repository of movie entities
+	 */
 	public Repository<Movie, Integer> getMovieRepository() {
 		return movieRepository;
 	}
 
+	/**
+	 * Sets a repository of movie entities
+	 * 
+	 * @param movieRepository
+	 */
 	public void setMovieRepository(Repository<Movie, Integer> movieRepository) {
 		this.movieRepository = movieRepository;
 	}
 
+	/**
+	 * Creates new movie entity in repository
+	 * 
+	 * @throws IncompleateInputExeption if fields {@code title}, or
+	 *                                  {@code releaseYear} in {@code movie} is
+	 *                                  {@code null}
+	 * 
+	 * @throws IncompleateInputExeption if fields no {@code directorId} and
+	 *                                  {@code directorName} in {@code movie} are
+	 *                                  {@code null}
+	 * @throws IncorrectInputException  if field {@code releaseYear} in
+	 *                                  {@code movie} less than 1895
+	 */
 	@Override
 	public MovieOutgoingDto createMovie(MovieIncomingDto movie)
 			throws IncompleateInputExeption, IncorrectInputException {
-		movieDataValidation(movie);
+		validateMovieData(movie);
 		return mapToOutgoingDto(movieRepository.save(mapFromIncomingDto(movie)));
 	}
 
+	/**
+	 * Returns all movie entities in repository
+	 */
 	@Override
 	public List<MovieOutgoingDto> getMovies() {
 		return movieRepository.findAll().stream().map(this::mapToOutgoingDto).toList();
 	}
 
+	/**
+	 * Returns movie entity with specified ID
+	 */
 	@Override
 	public Optional<MovieOutgoingDto> getMovieById(int id) {
 		Optional<Movie> optionalMovie = movieRepository.findById(id);
@@ -51,20 +78,41 @@ public class MovieServiceImpl implements MovieService {
 				: Optional.of(mapToOutgoingDto(optionalMovie.get()));
 	}
 
+	/**
+	 * Updates movie entity in repository
+	 * 
+	 * @param movie contains field {@code movieId} (ID of movie entity to update)
+	 *              and new data to persist
+	 * 
+	 * @throws IncompleateInputExeption if fields {@code movieId}, {@code title}, or
+	 *                                  {@code releaseYear} in {@code movie} is
+	 *                                  {@code null}
+	 * 
+	 * @throws IncompleateInputExeption if fields no {@code directorId} and
+	 *                                  {@code directorName} in {@code movie} are
+	 *                                  {@code null}
+	 * @throws IncorrectInputException  if field {@code releaseYear} in
+	 *                                  {@code movie} less than 1895
+	 */
 	@Override
-	public MovieOutgoingDto updateMovie(MovieIncomingDto movie) {
+	public MovieOutgoingDto updateMovie(MovieIncomingDto movie)
+			throws IncompleateInputExeption, IncorrectInputException {
 		if (movie.getId() == null)
 			throw new IncompleateInputExeption("There must be a movie ID");
-		movieDataValidation(movie);
+		validateMovieData(movie);
 		return mapToOutgoingDto(movieRepository.update(mapFromIncomingDto(movie)).get());
 	}
 
+	/**
+	 * Deletes movie entity from repository
+	 */
 	@Override
 	public boolean deleteMovie(int id) {
 		return movieRepository.deleteById(id);
 	}
 
-	private void movieDataValidation(MovieIncomingDto movie) {
+	private void validateMovieData(MovieIncomingDto movie)
+			throws IncompleateInputExeption, IncorrectInputException {
 		if (movie.getTitle() == null)
 			throw new IncompleateInputExeption("There must be a movie title");
 		if (movie.getReleaseYear() == null)
