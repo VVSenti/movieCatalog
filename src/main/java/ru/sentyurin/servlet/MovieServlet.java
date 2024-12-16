@@ -57,7 +57,7 @@ public class MovieServlet extends HttpServlet {
 	 * @see MovieOutgoingDto
 	 */
 	@Override
-	protected void doGet(HttpServletRequest request, HttpServletResponse response)
+	public void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		if (request.getParameter("id") != null) {
 			doGetById(request, response);
@@ -85,7 +85,7 @@ public class MovieServlet extends HttpServlet {
 	 * @see MovieOutgoingDto
 	 */
 	@Override
-	protected void doPost(HttpServletRequest request, HttpServletResponse response)
+	public void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		String json = request.getReader().lines().collect(Collectors.joining("\n"));
 		try {
@@ -126,7 +126,7 @@ public class MovieServlet extends HttpServlet {
 	 * @see MovieOutgoingDto
 	 **/
 	@Override
-	protected void doPut(HttpServletRequest request, HttpServletResponse response)
+	public void doPut(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		try {
 			String json = request.getReader().lines().collect(Collectors.joining("\n"));
@@ -163,7 +163,7 @@ public class MovieServlet extends HttpServlet {
 	 * @see HttpServlet#doDelete(HttpServletRequest, HttpServletResponse)
 	 */
 	@Override
-	protected void doDelete(HttpServletRequest request, HttpServletResponse response)
+	public void doDelete(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		Integer movieId = getIdFromPathVariableOrSetErrorInResponse(request, response);
 		if (movieId == null)

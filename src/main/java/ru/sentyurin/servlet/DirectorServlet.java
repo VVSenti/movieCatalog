@@ -55,7 +55,7 @@ public class DirectorServlet extends HttpServlet {
 	 * @see DirectorOutgoingDto
 	 */
 	@Override
-	protected void doGet(HttpServletRequest request, HttpServletResponse response)
+	public void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		if (request.getParameter("id") != null) {
 			doGetById(request, response);
@@ -83,7 +83,7 @@ public class DirectorServlet extends HttpServlet {
 	 * @see DirectorOutgoingDto
 	 */
 	@Override
-	protected void doPost(HttpServletRequest request, HttpServletResponse response)
+	public void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		try {
 			String json = request.getReader().lines().collect(Collectors.joining("\n"));
@@ -117,7 +117,7 @@ public class DirectorServlet extends HttpServlet {
 	 * @see DirectorOutgoingDto
 	 **/
 	@Override
-	protected void doPut(HttpServletRequest request, HttpServletResponse response)
+	public void doPut(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		try {
 			String json = request.getReader().lines().collect(Collectors.joining("\n"));
@@ -149,7 +149,7 @@ public class DirectorServlet extends HttpServlet {
 	 * @see HttpServlet#doDelete(HttpServletRequest, HttpServletResponse)
 	 */
 	@Override
-	protected void doDelete(HttpServletRequest request, HttpServletResponse response)
+	public void doDelete(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		Integer directorId = getIdFromPathVariableOrSetErrorInResponse(request, response);
 		if (directorId == null)

@@ -4,10 +4,16 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>ru.sentyurin</groupId>
 	<artifactId>movieCatalog</artifactId>
-	<packaging>war</packaging>
+	<packaging>jar</packaging>
 	<version>0.1</version>
 	<name>movieCatalog Maven Webapp</name>
 	<url>http://maven.apache.org</url>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<java.version>21</java.version>
+	</properties>
+	
 	<dependencies>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
@@ -50,5 +56,15 @@
 	</dependencies>
 	<build>
 		<finalName>movieCatalog</finalName>
-	</build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>16</source>
+                    <target>16</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
