@@ -100,7 +100,7 @@ public class MovieServiceImpl implements MovieService {
 		if (movie.getId() == null)
 			throw new IncompleateInputExeption("There must be a movie ID");
 		validateMovieData(movie);
-		return mapToOutgoingDto(movieRepository.update(mapFromIncomingDto(movie)).get());
+		return mapToOutgoingDto(movieRepository.update(mapFromIncomingDto(movie)).orElseThrow());
 	}
 
 	/**

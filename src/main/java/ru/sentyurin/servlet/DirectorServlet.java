@@ -18,6 +18,7 @@ import ru.sentyurin.service.DirectorService;
 import ru.sentyurin.service.impl.DirectorServiceImpl;
 import ru.sentyurin.servlet.dto.DirectorIncomingDto;
 import ru.sentyurin.servlet.dto.DirectorOutgoingDto;
+import ru.sentyurin.util.exception.DataBaseException;
 import ru.sentyurin.util.exception.IncompleateInputExeption;
 import ru.sentyurin.util.exception.NoDataInRepositoryException;
 
@@ -60,8 +61,14 @@ public class DirectorServlet extends HttpServlet {
 			doGetById(request, response);
 			return;
 		}
-		response.setContentType(JSON_MIME);
-		response.getWriter().print(objectMapper.writeValueAsString(directorService.getDirectors()));
+		try {
+			response.setContentType(JSON_MIME);
+			response.getWriter()
+					.print(objectMapper.writeValueAsString(directorService.getDirectors()));
+		} catch (DataBaseException e) {
+			response.setStatus(500);
+			response.getWriter().print(e.getMessage());
+		}
 	}
 
 	/**
@@ -92,6 +99,9 @@ public class DirectorServlet extends HttpServlet {
 		} catch (IncompleateInputExeption e) {
 			response.setStatus(400);
 			response.getWriter().print("Incompleate data: " + e.getMessage());
+		} catch (DataBaseException e) {
+			response.setStatus(500);
+			response.getWriter().print(e.getMessage());
 		}
 	}
 
@@ -125,6 +135,9 @@ public class DirectorServlet extends HttpServlet {
 		} catch (NoDataInRepositoryException e) {
 			response.setStatus(404);
 			response.getWriter().print(NO_DIRECTOR_WITH_ID_MSG);
+		} catch (DataBaseException e) {
+			response.setStatus(500);
+			response.getWriter().print(e.getMessage());
 		}
 	}
 
@@ -141,14 +154,18 @@ public class DirectorServlet extends HttpServlet {
 		Integer directorId = getIdFromPathVariableOrSetErrorInResponse(request, response);
 		if (directorId == null)
 			return;
-
-		boolean resultStatus = directorService.deleteDirector(directorId);
-		if (resultStatus) {
-			response.setStatus(200);
-			response.getWriter().printf("Director with id %d has been deleted", directorId);
-		} else {
-			response.setStatus(404);
-			response.getWriter().print(NO_DIRECTOR_WITH_ID_MSG);
+		try {
+			boolean resultStatus = directorService.deleteDirector(directorId);
+			if (resultStatus) {
+				response.setStatus(200);
+				response.getWriter().printf("Director with id %d has been deleted", directorId);
+			} else {
+				response.setStatus(404);
+				response.getWriter().print(NO_DIRECTOR_WITH_ID_MSG);
+			}
+		} catch (DataBaseException e) {
+			response.setStatus(500);
+			response.getWriter().print(e.getMessage());
 		}
 	}
 
@@ -167,15 +184,20 @@ public class DirectorServlet extends HttpServlet {
 		if (directorId == null)
 			return;
 
-		Optional<DirectorOutgoingDto> optionalDirector = directorService
-				.getDirectorById(directorId);
-		if (optionalDirector.isEmpty()) {
-			response.setStatus(404);
-			response.getWriter().print(NO_DIRECTOR_WITH_ID_MSG);
-			return;
+		try {
+			Optional<DirectorOutgoingDto> optionalDirector = directorService
+					.getDirectorById(directorId);
+			if (optionalDirector.isEmpty()) {
+				response.setStatus(404);
+				response.getWriter().print(NO_DIRECTOR_WITH_ID_MSG);
+				return;
+			}
+			response.setContentType(JSON_MIME);
+			objectMapper.writeValue(response.getWriter(), optionalDirector.get());
+		} catch (DataBaseException e) {
+			response.setStatus(500);
+			response.getWriter().print(e.getMessage());
 		}
-		response.setContentType(JSON_MIME);
-		objectMapper.writeValue(response.getWriter(), optionalDirector.get());
 	}
 
 	private Integer getIdFromPathVariableOrSetErrorInResponse(HttpServletRequest request,

@@ -12,6 +12,7 @@ import ru.sentyurin.db.ConnectionToDbManager;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.model.Movie;
 import ru.sentyurin.repository.mapper.MovieResultSetMapper;
+import ru.sentyurin.util.exception.DataBaseException;
 import ru.sentyurin.util.exception.InconsistentInputException;
 import ru.sentyurin.util.exception.IncorrectInputException;
 import ru.sentyurin.util.exception.NoDataInRepositoryException;
@@ -134,9 +135,9 @@ public class MovieRepository implements Repository<Movie, Integer> {
 			statement.setInt(3, directorInDB.getId());
 			statement.executeUpdate();
 		} catch (SQLException e) {
-			throw new RuntimeException(e);
+			throw new DataBaseException(e.getMessage());
 		}
-		return findByTitle(movie.getTitle()).get();
+		return findByTitle(movie.getTitle()).orElseThrow();
 	}
 
 	/**
@@ -149,7 +150,7 @@ public class MovieRepository implements Repository<Movie, Integer> {
 				ResultSet resultSet = statement.executeQuery()) {
 			return resultSetMapper.map(resultSet);
 		} catch (SQLException e) {
-			throw new RuntimeException(e);
+			throw new DataBaseException(e.getMessage());
 		}
 	}
 
@@ -167,7 +168,7 @@ public class MovieRepository implements Repository<Movie, Integer> {
 				return Optional.empty();
 			return Optional.of(movies.get(0));
 		} catch (SQLException e) {
-			throw new RuntimeException(e);
+			throw new DataBaseException(e.getMessage());
 		}
 	}
 
@@ -185,7 +186,7 @@ public class MovieRepository implements Repository<Movie, Integer> {
 			statement.setInt(1, id);
 			return statement.executeUpdate() == 1;
 		} catch (SQLException e) {
-			throw new RuntimeException(e);
+			throw new DataBaseException(e.getMessage());
 		}
 	}
 
@@ -203,7 +204,7 @@ public class MovieRepository implements Repository<Movie, Integer> {
 			statement.setInt(1, id);
 			return statement.executeUpdate() > 0;
 		} catch (SQLException e) {
-			throw new RuntimeException(e);
+			throw new DataBaseException(e.getMessage());
 		}
 	}
 
@@ -259,7 +260,7 @@ public class MovieRepository implements Repository<Movie, Integer> {
 			statement.setInt(4, movie.getId());
 			statement.executeUpdate();
 		} catch (SQLException e) {
-			throw new RuntimeException(e);
+			throw new DataBaseException(e.getMessage());
 		}
 		return findById(movie.getId());
 	}
@@ -278,7 +279,7 @@ public class MovieRepository implements Repository<Movie, Integer> {
 			ResultSet resultSet = statement.executeQuery();
 			return resultSet.next();
 		} catch (SQLException e) {
-			throw new RuntimeException(e);
+			throw new DataBaseException(e.getMessage());
 		}
 	}
 
@@ -292,7 +293,7 @@ public class MovieRepository implements Repository<Movie, Integer> {
 			statement.setInt(1, id);
 			return resultSetMapper.map(statement.executeQuery());
 		} catch (SQLException e) {
-			throw new RuntimeException(e);
+			throw new DataBaseException(e.getMessage());
 		}
 	}
 	
@@ -309,7 +310,7 @@ public class MovieRepository implements Repository<Movie, Integer> {
 								+ "director_id int NOT NULL)")) {
 			statement.executeUpdate();
 		} catch (SQLException e) {
-			throw new RuntimeException(e);
+			throw new DataBaseException(e.getMessage());
 		}
 	}
 
@@ -324,7 +325,7 @@ public class MovieRepository implements Repository<Movie, Integer> {
 				return Optional.empty();
 			return Optional.of(movies.get(0));
 		} catch (SQLException e) {
-			throw new RuntimeException(e);
+			throw new DataBaseException(e.getMessage());
 		}
 	}
 }

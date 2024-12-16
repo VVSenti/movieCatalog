@@ -84,7 +84,7 @@ public class DirectorServiceImpl implements DirectorService {
 		if (director.getId() == null)
 			throw new IncompleateInputExeption("There must be a director ID");
 		directorDataValidation(director);
-		Director updatedDirector = directorRepository.update(mapFromIncomingDto(director)).get();
+		Director updatedDirector = directorRepository.update(mapFromIncomingDto(director)).orElseThrow();
 		return mapToOutgoingDto(updatedDirector);
 	}
 

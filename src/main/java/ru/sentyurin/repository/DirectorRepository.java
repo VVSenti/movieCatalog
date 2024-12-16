@@ -11,6 +11,7 @@ import ru.sentyurin.db.ConnectionManager;
 import ru.sentyurin.db.ConnectionToDbManager;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.repository.mapper.DirectorResultSetMapper;
+import ru.sentyurin.util.exception.DataBaseException;
 import ru.sentyurin.util.exception.NoDataInRepositoryException;
 
 public class DirectorRepository implements Repository<Director, Integer> {
@@ -88,7 +89,7 @@ public class DirectorRepository implements Repository<Director, Integer> {
 			statement.setString(1, directorName);
 			statement.executeUpdate();
 		} catch (SQLException e) {
-			throw new RuntimeException(e);
+			throw new DataBaseException(e.getMessage());
 		}
 		return findByName(directorName).orElse(null);
 
@@ -104,7 +105,7 @@ public class DirectorRepository implements Repository<Director, Integer> {
 				ResultSet resultSet = statement.executeQuery()) {
 			return resultSetMapper.map(resultSet);
 		} catch (SQLException e) {
-			throw new RuntimeException(e);
+			throw new DataBaseException(e.getMessage());
 		}
 	}
 
@@ -124,7 +125,7 @@ public class DirectorRepository implements Repository<Director, Integer> {
 			director.setMovies(movieRepository.findByDirectorId(id));
 			return Optional.of(director);
 		} catch (SQLException e) {
-			throw new RuntimeException(e);
+			throw new DataBaseException(e.getMessage());
 		}
 	}
 
@@ -144,7 +145,7 @@ public class DirectorRepository implements Repository<Director, Integer> {
 				return false;
 			}
 		} catch (SQLException e) {
-			throw new RuntimeException(e);
+			throw new DataBaseException(e.getMessage());
 		}
 		movieRepository.deleteByDirectorId(id);
 		return true;
@@ -169,7 +170,7 @@ public class DirectorRepository implements Repository<Director, Integer> {
 			statement.setInt(2, director.getId());
 			statement.executeUpdate();
 		} catch (SQLException e) {
-			throw new RuntimeException(e);
+			throw new DataBaseException(e.getMessage());
 		}
 		return findById(director.getId());
 	}
@@ -188,7 +189,7 @@ public class DirectorRepository implements Repository<Director, Integer> {
 			ResultSet resultSet = statement.executeQuery();
 			return resultSet.next();
 		} catch (SQLException e) {
-			throw new RuntimeException(e);
+			throw new DataBaseException(e.getMessage());
 		}
 	}
 
@@ -204,7 +205,7 @@ public class DirectorRepository implements Repository<Director, Integer> {
 								+ "name varchar UNIQUE NOT NULL)")) {
 			statement.executeUpdate();
 		} catch (SQLException e) {
-			throw new RuntimeException(e);
+			throw new DataBaseException(e.getMessage());
 		}
 	}
 
@@ -216,7 +217,7 @@ public class DirectorRepository implements Repository<Director, Integer> {
 			List<Director> directors = resultSetMapper.map(resultSet);
 			return directors.isEmpty() ? Optional.empty() : Optional.of(directors.get(0));
 		} catch (SQLException e) {
-			throw new RuntimeException(e);
+			throw new DataBaseException(e.getMessage());
 		}
 	}
 

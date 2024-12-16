@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import ru.sentyurin.config.ConfigLoader;
+import ru.sentyurin.util.exception.DataBaseDriverClassNotFound;
 
 public class ConnectionToDbManager implements ConnectionManager {
 
@@ -15,7 +16,7 @@ public class ConnectionToDbManager implements ConnectionManager {
 		try {
 			Class.forName(configLoader.getProperty("driverClassName"));
 		} catch (ClassNotFoundException e) {
-			throw new RuntimeException(e.getMessage());
+			throw new DataBaseDriverClassNotFound(e.getMessage());
 		}
 	}
 

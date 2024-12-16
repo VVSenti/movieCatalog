@@ -18,6 +18,7 @@ import ru.sentyurin.service.MovieService;
 import ru.sentyurin.service.impl.MovieServiceImpl;
 import ru.sentyurin.servlet.dto.MovieIncomingDto;
 import ru.sentyurin.servlet.dto.MovieOutgoingDto;
+import ru.sentyurin.util.exception.DataBaseException;
 import ru.sentyurin.util.exception.IncompleateInputExeption;
 import ru.sentyurin.util.exception.InconsistentInputException;
 import ru.sentyurin.util.exception.IncorrectInputException;
@@ -63,14 +64,19 @@ public class MovieServlet extends HttpServlet {
 			return;
 		}
 		response.setContentType(JSON_MIME);
-		response.getWriter().print(objectMapper.writeValueAsString(movieService.getMovies()));
+		try {
+			response.getWriter().print(objectMapper.writeValueAsString(movieService.getMovies()));
+		} catch (DataBaseException e) {
+			response.setStatus(500);
+			response.getWriter().print(e.getMessage());
+		}
 	}
 
 	/**
 	 * A method to create a new movie entity in repository.
 	 * 
-	 * Input JSON is mapped to {@code MovieIncomingDto}. An example of
-	 * JSON in put in HTTP body: {"title":"Reservoir dogs", "releaseYear":1992,
+	 * Input JSON is mapped to {@code MovieIncomingDto}. An example of JSON in put
+	 * in HTTP body: {"title":"Reservoir dogs", "releaseYear":1992,
 	 * "directorName":"Quentin Tarantino"}
 	 * 
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse
@@ -101,15 +107,18 @@ public class MovieServlet extends HttpServlet {
 		} catch (InconsistentInputException e) {
 			response.setStatus(400);
 			response.getWriter().print("Inconsistent data: " + e.getMessage());
+		} catch (DataBaseException e) {
+			response.setStatus(500);
+			response.getWriter().print(e.getMessage());
 		}
 	}
 
 	/**
 	 * A method to update an existing movie entity in repository.
 	 * 
-	 * Input JSON is be mapped to {@code MovieIncomingDto}. An example of
-	 * JSON in put in HTTP body: {"id":1, "title":"Reservoir dogs",
-	 * "releaseYear":1992, "directorId":1, "directorName":"Quentin Tarantino"}.
+	 * Input JSON is be mapped to {@code MovieIncomingDto}. An example of JSON in
+	 * put in HTTP body: {"id":1, "title":"Reservoir dogs", "releaseYear":1992,
+	 * "directorId":1, "directorName":"Quentin Tarantino"}.
 	 * 
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse
 	 *      response)
@@ -141,6 +150,9 @@ public class MovieServlet extends HttpServlet {
 		} catch (NoDataInRepositoryException e) {
 			response.setStatus(404);
 			response.getWriter().print(e.getMessage());
+		} catch (DataBaseException e) {
+			response.setStatus(500);
+			response.getWriter().print(e.getMessage());
 		}
 	}
 
@@ -157,13 +169,18 @@ public class MovieServlet extends HttpServlet {
 		if (movieId == null)
 			return;
 
-		boolean resultStatus = movieService.deleteMovie(movieId);
-		if (resultStatus) {
-			response.setStatus(200);
-			response.getWriter().printf("Movie with id %d has been deleted", movieId);
-		} else {
-			response.setStatus(404);
-			response.getWriter().print(NOT_FOUND_BY_ID_MSG);
+		try {
+			boolean resultStatus = movieService.deleteMovie(movieId);
+			if (resultStatus) {
+				response.setStatus(200);
+				response.getWriter().printf("Movie with id %d has been deleted", movieId);
+			} else {
+				response.setStatus(404);
+				response.getWriter().print(NOT_FOUND_BY_ID_MSG);
+			}
+		} catch (DataBaseException e) {
+			response.setStatus(500);
+			response.getWriter().print(e.getMessage());
 		}
 
 	}
@@ -182,16 +199,20 @@ public class MovieServlet extends HttpServlet {
 		Integer movieId = getIdFromPathVariableOrSetErrorInResponse(request, response);
 		if (movieId == null)
 			return;
+		try {
+			Optional<MovieOutgoingDto> optionalMovie = movieService.getMovieById(movieId);
+			if (optionalMovie.isEmpty()) {
+				response.setStatus(404);
+				response.getWriter().print(NOT_FOUND_BY_ID_MSG);
+				return;
+			}
 
-		Optional<MovieOutgoingDto> optionalMovie = movieService.getMovieById(movieId);
-		if (optionalMovie.isEmpty()) {
-			response.setStatus(404);
-			response.getWriter().print(NOT_FOUND_BY_ID_MSG);
-			return;
+			response.setContentType(JSON_MIME);
+			response.getWriter().print(objectMapper.writeValueAsString(optionalMovie.get()));
+		} catch (DataBaseException e) {
+			response.setStatus(500);
+			response.getWriter().print(e.getMessage());
 		}
-
-		response.setContentType(JSON_MIME);
-		response.getWriter().print(objectMapper.writeValueAsString(optionalMovie.get()));
 	}
 
 	private Integer getIdFromPathVariableOrSetErrorInResponse(HttpServletRequest request,
@@ -207,6 +228,9 @@ public class MovieServlet extends HttpServlet {
 		} catch (NumberFormatException e) {
 			response.setStatus(400);
 			response.getWriter().print(ID_FORMAT_ERROR_MSG);
+		} catch (DataBaseException e) {
+			response.setStatus(500);
+			response.getWriter().print(e.getMessage());
 		}
 		return movieId;
 	}
