@@ -58,7 +58,7 @@ class DirectorRepositoryTest {
 		directorRepository.save(new Director(null, "Slava", null));
 		directorRepository.save(new Director(null, "Vasya", null));
 		List<Director> directors = directorRepository.findAll();
-		Director directorToFind = directors.getFirst();
+		Director directorToFind = directors.get(0);
 		Director foundDirector = directorRepository.findById(directorToFind.getId()).get();
 		assertEquals(directorToFind.getId(), foundDirector.getId());
 		assertEquals(directorToFind.getName(), foundDirector.getName());
@@ -69,7 +69,7 @@ class DirectorRepositoryTest {
 		directorRepository.save(new Director(1, "Slava", null));
 		directorRepository.save(new Director(2, "Vasya", null));
 		List<Director> directors = directorRepository.findAll();
-		Director directorToDelete = directors.getFirst();
+		Director directorToDelete = directors.get(0);
 		boolean resultStatus = directorRepository.deleteById(directorToDelete.getId());
 		Optional<Director> foundDirector = directorRepository.findById(directorToDelete.getId());
 		assertTrue(foundDirector.isEmpty());

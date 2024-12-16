@@ -165,7 +165,7 @@ public class MovieRepository implements Repository<Movie, Integer> {
 			List<Movie> movies = resultSetMapper.map(resultSet);
 			if (movies.isEmpty())
 				return Optional.empty();
-			return Optional.of(movies.getFirst());
+			return Optional.of(movies.get(0));
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
@@ -322,7 +322,7 @@ public class MovieRepository implements Repository<Movie, Integer> {
 			List<Movie> movies = resultSetMapper.map(resultSet);
 			if (movies.isEmpty())
 				return Optional.empty();
-			return Optional.of(movies.getFirst());
+			return Optional.of(movies.get(0));
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}

@@ -45,9 +45,9 @@ class DirectorDtoMapperImplTest {
 		DirectorOutgoingDto directorDto = dtoMapper.map(director);
 		assertEquals(DIRECTOR_ID, directorDto.getId());
 		assertEquals(DIRECTOR_NAME, directorDto.getName());
-		assertEquals(MOVIE_ID, directorDto.getMovies().getFirst().getId());
-		assertEquals(MOVIE_TITLE, directorDto.getMovies().getFirst().getTitle());
-		assertEquals(MOVIE_RELEASE_YEAR, directorDto.getMovies().getFirst().getReleaseYear());
+		assertEquals(MOVIE_ID, directorDto.getMovies().get(0).getId());
+		assertEquals(MOVIE_TITLE, directorDto.getMovies().get(0).getTitle());
+		assertEquals(MOVIE_RELEASE_YEAR, directorDto.getMovies().get(0).getReleaseYear());
 	}
 
 	@Test

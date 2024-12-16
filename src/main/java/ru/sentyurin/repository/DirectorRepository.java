@@ -120,7 +120,7 @@ public class DirectorRepository implements Repository<Director, Integer> {
 			List<Director> directors = resultSetMapper.map(resultSet);
 			if (directors.isEmpty())
 				return Optional.empty();
-			Director director = directors.getFirst();
+			Director director = directors.get(0);
 			director.setMovies(movieRepository.findByDirectorId(id));
 			return Optional.of(director);
 		} catch (SQLException e) {
@@ -214,7 +214,7 @@ public class DirectorRepository implements Repository<Director, Integer> {
 			statement.setString(1, name);
 			ResultSet resultSet = statement.executeQuery();
 			List<Director> directors = resultSetMapper.map(resultSet);
-			return directors.isEmpty() ? Optional.empty() : Optional.of(directors.getFirst());
+			return directors.isEmpty() ? Optional.empty() : Optional.of(directors.get(0));
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}

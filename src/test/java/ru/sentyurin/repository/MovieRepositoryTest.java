@@ -18,7 +18,6 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.model.Movie;
 import ru.sentyurin.util.exception.InconsistentInputException;
-import ru.sentyurin.util.exception.IncorrectInputException;
 import ru.sentyurin.util.exception.NoDataInRepositoryException;
 
 class MovieRepositoryTest {
@@ -63,7 +62,7 @@ class MovieRepositoryTest {
 		movieRepository.save(new Movie(null, "Reservoir dogs", 1992, director));
 		movieRepository.save(new Movie(null, "Pulp Fiction", 1994, director));
 		List<Movie> movies = movieRepository.findAll();
-		Movie movieToFind = movies.getFirst();
+		Movie movieToFind = movies.get(0);
 		Movie foundMovie = movieRepository.findById(movieToFind.getId()).get();
 		assertEquals(movieToFind.getId(), foundMovie.getId());
 		assertEquals(movieToFind.getTitle(), foundMovie.getTitle());
@@ -76,7 +75,7 @@ class MovieRepositoryTest {
 		movieRepository.save(new Movie(null, "Reservoir dogs", 1992, director));
 		movieRepository.save(new Movie(null, "Pulp Fiction", 1994, director));
 		List<Movie> movies = movieRepository.findAll();
-		Movie movieToDelete = movies.getFirst();
+		Movie movieToDelete = movies.get(0);
 		
 		boolean resultStatus = movieRepository.deleteById(movieToDelete.getId());
 		Optional<Movie> foundMovie = movieRepository.findById(movieToDelete.getId());
@@ -185,7 +184,7 @@ class MovieRepositoryTest {
 		movieRepository.save(new Movie(null, "Pulp Fiction", 1994, director));
 		List<Movie> movies = movieRepository.findAll();
 		assertEquals(2, movies.size());
-		Integer directorId = movies.getFirst().getDirector().getId();
+		Integer directorId = movies.get(0).getDirector().getId();
 		movieRepository.deleteByDirectorId(directorId);
 		movies = movieRepository.findAll();
 		assertEquals(0, movies.size());		
@@ -198,7 +197,7 @@ class MovieRepositoryTest {
 		movieRepository.save(new Movie(null, "Pulp Fiction", 1994, director));
 		List<Movie> movies = movieRepository.findAll();
 		assertEquals(2, movies.size());
-		Integer directorId = movies.getFirst().getDirector().getId();
+		Integer directorId = movies.get(0).getDirector().getId();
 		movies = movieRepository.findByDirectorId(directorId);
 		assertEquals(2, movies.size());		
 	}
