@@ -34,7 +34,7 @@ public class DirectorServlet extends HttpServlet {
 	private static final String ID_FORMAT_ERROR = "Incorrect \"id\" path variable format";
 
 	private final ObjectMapper objectMapper;
-	private DirectorService directorService;
+	private final DirectorService directorService;
 
 	/**
 	 * @see HttpServlet#HttpServlet()
@@ -167,15 +167,6 @@ public class DirectorServlet extends HttpServlet {
 			response.setStatus(500);
 			response.getWriter().print(e.getMessage());
 		}
-	}
-
-	/**
-	 * Sets {@code MovieRepository}
-	 * 
-	 * @param movieService
-	 */
-	public void setDirectorService(DirectorService directorService) {
-		this.directorService = directorService;
 	}
 
 	private void doGetById(HttpServletRequest request, HttpServletResponse response)

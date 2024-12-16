@@ -36,7 +36,7 @@ public class MovieServlet extends HttpServlet {
 	private static final String ID_FORMAT_ERROR_MSG = "Incorrect \"id\" path variable format";
 
 	private final ObjectMapper objectMapper;
-	private MovieService movieService;
+	private final MovieService movieService;
 
 	/**
 	 * @see HttpServlet#HttpServlet()
@@ -183,15 +183,6 @@ public class MovieServlet extends HttpServlet {
 			response.getWriter().print(e.getMessage());
 		}
 
-	}
-
-	/**
-	 * Sets {@code MovieRepository}
-	 * 
-	 * @param movieService
-	 */
-	public void setMovieService(MovieService movieService) {
-		this.movieService = movieService;
 	}
 
 	private void doGetById(HttpServletRequest request, HttpServletResponse response)
