@@ -1,5 +1,8 @@
 package ru.sentyurin.repository;
 
+import static java.sql.Statement.RETURN_GENERATED_KEYS;
+
+import java.beans.Statement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -85,14 +88,18 @@ public class DirectorRepository implements Repository<Director, Integer> {
 			return directorInDB.get();
 		}
 		try (Connection connection = connectionManager.getConnection();
-				PreparedStatement statement = connection.prepareStatement(SAVE_SQL)) {
+				PreparedStatement statement = connection.prepareStatement(SAVE_SQL,
+						RETURN_GENERATED_KEYS)) {
 			statement.setString(1, directorName);
 			statement.executeUpdate();
+			ResultSet resultSet = statement.getGeneratedKeys();
+			if(resultSet.next()) {
+				director.setId(resultSet.getInt("id"));
+			}
+			return director;
 		} catch (SQLException e) {
 			throw new DataBaseException(e.getMessage());
 		}
-		return findByName(directorName).orElse(null);
-
 	}
 
 	/**
