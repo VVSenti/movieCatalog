@@ -53,11 +53,7 @@ class DirectorServletTest {
 			serviceField.setAccessible(true);
 			serviceField.set(servlet, service);
 			serviceField.setAccessible(false);
-		} catch (NoSuchFieldException | SecurityException e) {
-			e.printStackTrace();
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 

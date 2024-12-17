@@ -52,18 +52,14 @@ class MovieServletTest {
 
 		servlet = new MovieServlet();
 		service = Mockito.mock(MovieService.class);
-		
+
 		Field serviceField;
 		try {
 			serviceField = MovieServlet.class.getDeclaredField("movieService");
 			serviceField.setAccessible(true);
 			serviceField.set(servlet, service);
 			serviceField.setAccessible(false);
-		} catch (NoSuchFieldException | SecurityException e) {
-			e.printStackTrace();
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
@@ -101,7 +97,8 @@ class MovieServletTest {
 	void shouldReturnMovieById() throws ServletException, IOException {
 		Integer movieIdToGet = 2;
 		Mockito.when(request.getParameter("id")).thenReturn(movieIdToGet.toString());
-		Mockito.when(service.getMovieById(movieIdToGet)).thenReturn(Optional.of(new MovieOutgoingDto()));
+		Mockito.when(service.getMovieById(movieIdToGet))
+				.thenReturn(Optional.of(new MovieOutgoingDto()));
 
 		servlet.doGet(request, response);
 		MovieOutgoingDto movieDto = objectMapper.readValue(responseStringWriter.toString(),
@@ -242,7 +239,7 @@ class MovieServletTest {
 		servlet.doPut(request, response);
 		assertEquals(400, responseStatus.get());
 	}
-	
+
 	@Test
 	void shouldReturnCorrectStatusWhenUpdateWithInvalidJsonRequestBody()
 			throws IOException, ServletException {
@@ -250,7 +247,7 @@ class MovieServletTest {
 		servlet.doPut(request, response);
 		assertEquals(400, responseStatus.get());
 	}
-	
+
 	@Test
 	void shouldReturnCorrectStatusWhenUpdateWithIncompleateDataInput()
 			throws IOException, ServletException {
@@ -262,10 +259,9 @@ class MovieServletTest {
 		servlet.doPut(request, response);
 		assertEquals(400, responseStatus.get());
 	}
-	
+
 	@Test
-	void shouldReturnCorrectStatusWhenUpdateWithInvalidId()
-			throws IOException, ServletException {
+	void shouldReturnCorrectStatusWhenUpdateWithInvalidId() throws IOException, ServletException {
 		String json = objectMapper.writeValueAsString(new MovieIncomingDto());
 		Mockito.when(service.updateMovie(Mockito.any(MovieIncomingDto.class)))
 				.thenThrow(new NoDataInRepositoryException(""));
@@ -274,7 +270,7 @@ class MovieServletTest {
 		servlet.doPut(request, response);
 		assertEquals(404, responseStatus.get());
 	}
-	
+
 	@Test
 	void shouldReturnCorrectStatusWhenUpdateWithInconsistentDatainput()
 			throws IOException, ServletException {
