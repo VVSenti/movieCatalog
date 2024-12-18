@@ -2,9 +2,9 @@ package ru.sentyurin.repository;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import ru.sentyurin.db.ConnectionManager;
+import ru.sentyurin.db.ConnectionToDbManager;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.model.Movie;
 
@@ -15,9 +15,16 @@ public class RepositoryFactory {
 		MovieRepository movieRepository = new MovieRepository();
 		DirectorRepository directorRepository = new DirectorRepository();
 		movieRepository.setDirectorRepository(directorRepository);
-		directorRepository.setMovieRepository(movieRepository);
 		map.put(Movie.class, movieRepository);
 		map.put(Director.class, directorRepository);
+		try {
+			ConnectionManager connectionManager = new ConnectionToDbManager();
+			setConnectionManager(connectionManager);
+		} catch (Exception e) {
+			// If there is no database.properties file in resources
+			// new ConnectionToDbManager() throws exception
+			// repositories remains without ConnectionManager
+		}
 	}
 
 	private RepositoryFactory() {
@@ -35,8 +42,8 @@ public class RepositoryFactory {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T, K> Repository<T, K> getRepository(Class<T> valueClass, Class<K> keyClass) {
-		Objects.requireNonNull(valueClass);
-		Objects.requireNonNull(keyClass);
+		if (keyClass != Integer.class)
+			throw new IllegalArgumentException();
 		return (Repository<T, K>) map.get(valueClass);
 	}
 

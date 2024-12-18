@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Optional;
 
 import ru.sentyurin.db.ConnectionManager;
-import ru.sentyurin.db.ConnectionToDbManager;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.model.Movie;
 import ru.sentyurin.repository.mapper.MovieResultSetMapper;
@@ -64,7 +63,6 @@ public class MovieRepository implements Repository<Movie, Integer> {
 
 	public MovieRepository() {
 		resultSetMapper = new MovieResultSetMapper();
-		connectionManager = new ConnectionToDbManager();
 	}
 
 	/**
