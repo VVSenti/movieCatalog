@@ -18,7 +18,7 @@ import ru.sentyurin.db.ConnectionManagerHiber;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.util.exception.NoDataInRepositoryException;
 
-class DirectorRepositoryTest {
+class DirectorRepositoryHiberTest {
 
 	static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
 

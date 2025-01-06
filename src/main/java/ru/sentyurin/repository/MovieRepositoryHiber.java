@@ -8,7 +8,6 @@ import org.hibernate.Session;
 import ru.sentyurin.db.ConnectionManagerHiber;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.model.Movie;
-import ru.sentyurin.repository.mapper.MovieResultSetMapper;
 import ru.sentyurin.util.exception.DataBaseException;
 import ru.sentyurin.util.exception.InconsistentInputException;
 import ru.sentyurin.util.exception.IncorrectInputException;
@@ -28,7 +27,7 @@ public class MovieRepositoryHiber implements Repository<Movie, Integer> {
 			from Movie m left join fetch m.director
 			where m.title = :title""";
 
-	private static final String DELETE_BY_DIRECTOR_ID_SQL = "delete from Movie where director_id=?";
+	private static final String DELETE_BY_DIRECTOR_ID_HQL = "delete from Movie where director_id = :id";
 
 	private static final String INIT_TABLE_MOVIE_SQL = """
 			create table if not exists Movie (
@@ -36,13 +35,9 @@ public class MovieRepositoryHiber implements Repository<Movie, Integer> {
 			title varchar UNIQUE NOT NULL, release_year int NOT NULL,
 			director_id int NOT NULL) """;
 
-	private final MovieResultSetMapper resultSetMapper;
 	private ConnectionManagerHiber connectionManager;
 	private Repository<Director, Integer> directorRepository;
 
-	public MovieRepositoryHiber() {
-		resultSetMapper = new MovieResultSetMapper();
-	}
 
 	/**
 	 * Returns {@code ConnectionManager}
@@ -187,8 +182,11 @@ public class MovieRepositoryHiber implements Repository<Movie, Integer> {
 	public boolean deleteByDirectorId(Integer id) {
 		try (Session session = connectionManager.openSession()) {
 			session.beginTransaction();
-//			TODO
-			return false;
+			@SuppressWarnings("deprecation")
+			int res = session.createNativeQuery(DELETE_BY_DIRECTOR_ID_HQL).setParameter("id", id)
+					.executeUpdate();
+			session.getTransaction().commit();
+			return res > 0;
 		} catch (Exception e) {
 			throw new DataBaseException(e.getMessage());
 		}
@@ -278,7 +276,7 @@ public class MovieRepositoryHiber implements Repository<Movie, Integer> {
 		try (Session session = connectionManager.openSession()) {
 			session.beginTransaction();
 			List<Movie> movies = session.createQuery(GET_ALL_MOVIES_BY_DIRECTOR_ID_HQL, Movie.class)
-					.setParameter(":id", id).list();
+					.setParameter("id", id).list();
 			session.getTransaction().commit();
 			return movies;
 		} catch (Exception e) {

@@ -12,7 +12,7 @@ import ru.sentyurin.util.exception.NoDataInRepositoryException;
 
 public class DirectorRepositoryHiber implements Repository<Director, Integer> {
 
-	private static final String GET_ALL_HQL = "from Director";
+	private static final String GET_ALL_HQL = "from Director d left join fetch d.movies";
 
 	private static final String GET_BY_ID_HQL = "from Director d left join fetch d.movies where d.id = :id";
 
@@ -21,9 +21,6 @@ public class DirectorRepositoryHiber implements Repository<Director, Integer> {
 	private static final String DELETE_MOVIES_BY_DIRECTOR_ID_SQL = "delete from Movie where director_id=?";
 
 	private ConnectionManagerHiber connectionManager;
-
-	public DirectorRepositoryHiber() {
-	}
 
 	/**
 	 * Returns {@code ConnectionManager}

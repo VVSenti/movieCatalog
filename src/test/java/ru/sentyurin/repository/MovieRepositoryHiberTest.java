@@ -21,7 +21,7 @@ import ru.sentyurin.model.Movie;
 import ru.sentyurin.util.exception.InconsistentInputException;
 import ru.sentyurin.util.exception.NoDataInRepositoryException;
 
-class MovieRepositoryTest {
+class MovieRepositoryHiberTest {
 
 	static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
 
@@ -44,6 +44,8 @@ class MovieRepositoryTest {
 				Integer.class);
 		connectionManager = new ConnectionToTestDbManagerHiber(postgres);
 		RepositoryFactoryHiber.setConnectionManager(connectionManager);
+		// cleans up repository before test
+		movieRepository.findAll().forEach(d -> movieRepository.deleteById(d.getId()));
 	}
 
 	@Test

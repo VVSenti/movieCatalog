@@ -3,9 +3,7 @@ package ru.sentyurin.repository;
 import java.util.HashMap;
 import java.util.Map;
 
-import ru.sentyurin.db.ConnectionManager;
 import ru.sentyurin.db.ConnectionManagerHiber;
-import ru.sentyurin.db.ConnectionToDbManager;
 import ru.sentyurin.db.ConnectionToDbManagerHiber;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.model.Movie;
