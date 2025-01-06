@@ -5,7 +5,7 @@ import java.util.Optional;
 
 import ru.sentyurin.model.Movie;
 import ru.sentyurin.repository.Repository;
-import ru.sentyurin.repository.RepositoryFactory;
+import ru.sentyurin.repository.RepositoryFactoryHiber;
 import ru.sentyurin.service.MovieService;
 import ru.sentyurin.servlet.dto.MovieIncomingDto;
 import ru.sentyurin.servlet.dto.MovieOutgoingDto;
@@ -20,7 +20,7 @@ public class MovieServiceImpl implements MovieService {
 	private final MovieDtoMapper dtoMapper;
 
 	public MovieServiceImpl() {
-		movieRepository = RepositoryFactory.getRepository(Movie.class, Integer.class);
+		movieRepository = RepositoryFactoryHiber.getRepository(Movie.class, Integer.class);
 		dtoMapper = new MovieDtoMapperImpl();
 	}
 

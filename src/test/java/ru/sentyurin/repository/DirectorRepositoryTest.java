@@ -14,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
 
+import ru.sentyurin.db.ConnectionManagerHiber;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.util.exception.NoDataInRepositoryException;
 
@@ -21,8 +22,8 @@ class DirectorRepositoryTest {
 
 	static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
 
-	private DirectorRepository directorRepository;
-	private DBConnectionProvider connectionManager;
+	private DirectorRepositoryHiber directorRepository;
+	private ConnectionManagerHiber connectionManager;
 
 	@BeforeAll
 	static void beforeAll() {
@@ -36,10 +37,10 @@ class DirectorRepositoryTest {
 
 	@BeforeEach
 	void init() {
-		connectionManager = new DBConnectionProvider(postgres.getJdbcUrl(), postgres.getUsername(),
-				postgres.getPassword());
-		directorRepository = (DirectorRepository) RepositoryFactory.getRepository(Director.class, Integer.class);
-		RepositoryFactory.setConnectionManager(connectionManager);
+		directorRepository = (DirectorRepositoryHiber) RepositoryFactoryHiber.getRepository(Director.class,
+				Integer.class);
+		connectionManager = new ConnectionToTestDbManagerHiber(postgres);
+		RepositoryFactoryHiber.setConnectionManager(connectionManager);
 	}
 
 	@Test
@@ -65,8 +66,8 @@ class DirectorRepositoryTest {
 
 	@Test
 	void shouldDeleteDirectorById() {
-		directorRepository.save(new Director(1, "Slava", null));
-		directorRepository.save(new Director(2, "Vasya", null));
+		directorRepository.save(new Director(null, "Slava", null));
+		directorRepository.save(new Director(null, "Vasya", null));
 		List<Director> directors = directorRepository.findAll();
 		Director directorToDelete = directors.get(0);
 		boolean resultStatus = directorRepository.deleteById(directorToDelete.getId());
@@ -83,7 +84,7 @@ class DirectorRepositoryTest {
 
 	@Test
 	void shouldUpdateDirector() {
-		directorRepository.save(new Director(1, "Slava", null));
+		directorRepository.save(new Director(null, "Slava", null));
 		List<Director> directors = directorRepository.findAll();
 		Director directorToUpdate = directors.stream().filter(d -> "Slava".equals(d.getName()))
 				.findFirst().get();

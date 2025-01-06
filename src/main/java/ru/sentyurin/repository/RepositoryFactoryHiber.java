@@ -4,21 +4,23 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ru.sentyurin.db.ConnectionManager;
+import ru.sentyurin.db.ConnectionManagerHiber;
 import ru.sentyurin.db.ConnectionToDbManager;
+import ru.sentyurin.db.ConnectionToDbManagerHiber;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.model.Movie;
 
-public class RepositoryFactory {
+public class RepositoryFactoryHiber {
 	private static final Map<Class<?>, Repository<?, ?>> map;
 	static {
 		map = new HashMap<>();
-		MovieRepository movieRepository = new MovieRepository();
-		DirectorRepository directorRepository = new DirectorRepository();
+		DirectorRepositoryHiber directorRepository = new DirectorRepositoryHiber();
+		map.put(Director.class, directorRepository);
+		MovieRepositoryHiber movieRepository = new MovieRepositoryHiber();
 		movieRepository.setDirectorRepository(directorRepository);
 		map.put(Movie.class, movieRepository);
-		map.put(Director.class, directorRepository);
 		try {
-			ConnectionManager connectionManager = new ConnectionToDbManager();
+			ConnectionToDbManagerHiber connectionManager = new ConnectionToDbManagerHiber();
 			setConnectionManager(connectionManager);
 		} catch (Exception e) {
 			// If there is no database.properties file in resources
@@ -27,7 +29,7 @@ public class RepositoryFactory {
 		}
 	}
 
-	private RepositoryFactory() {
+	private RepositoryFactoryHiber() {
 	}
 
 	/**
@@ -53,9 +55,8 @@ public class RepositoryFactory {
 	 * 
 	 * @param connectionManager
 	 */
-	public static void setConnectionManager(ConnectionManager connectionManager) {
+	public static void setConnectionManager(ConnectionManagerHiber connectionManager) {
 		map.values().forEach(v -> v.setConnectionManager(connectionManager));
-		map.values().forEach(Repository::initDb);
 	}
 
 }

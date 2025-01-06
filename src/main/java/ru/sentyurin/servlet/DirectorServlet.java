@@ -57,6 +57,7 @@ public class DirectorServlet extends HttpServlet {
 	@Override
 	public void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
+		response.setCharacterEncoding("UTF-8");
 		if (request.getParameter("id") != null) {
 			doGetById(request, response);
 			return;
@@ -85,6 +86,7 @@ public class DirectorServlet extends HttpServlet {
 	@Override
 	public void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
+		response.setCharacterEncoding("UTF-8");
 		try {
 			String json = request.getReader().lines().collect(Collectors.joining("\n"));
 			DirectorIncomingDto incomingDto = objectMapper.readValue(json,
@@ -119,6 +121,7 @@ public class DirectorServlet extends HttpServlet {
 	@Override
 	public void doPut(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
+		response.setCharacterEncoding("UTF-8");
 		try {
 			String json = request.getReader().lines().collect(Collectors.joining("\n"));
 			DirectorIncomingDto incomingDto = objectMapper.readValue(json,
@@ -151,6 +154,7 @@ public class DirectorServlet extends HttpServlet {
 	@Override
 	public void doDelete(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
+		response.setCharacterEncoding("UTF-8");
 		Integer directorId = getIdFromPathVariableOrSetErrorInResponse(request, response);
 		if (directorId == null)
 			return;

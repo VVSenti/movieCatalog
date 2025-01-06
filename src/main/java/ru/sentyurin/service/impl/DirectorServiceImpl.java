@@ -5,7 +5,7 @@ import java.util.Optional;
 
 import ru.sentyurin.model.Director;
 import ru.sentyurin.repository.Repository;
-import ru.sentyurin.repository.RepositoryFactory;
+import ru.sentyurin.repository.RepositoryFactoryHiber;
 import ru.sentyurin.service.DirectorService;
 import ru.sentyurin.servlet.dto.DirectorIncomingDto;
 import ru.sentyurin.servlet.dto.DirectorOutgoingDto;
@@ -19,7 +19,7 @@ public class DirectorServiceImpl implements DirectorService {
 	private final DirectorDtoMapper dtoMapper;
 
 	public DirectorServiceImpl() {
-		directorRepository = RepositoryFactory.getRepository(Director.class, Integer.class);
+		directorRepository = RepositoryFactoryHiber.getRepository(Director.class, Integer.class);
 		dtoMapper = new DirectorDtoMapperImpl();
 	}
 

@@ -1,15 +1,11 @@
 package ru.sentyurin.repository;
 
-import static java.sql.Statement.RETURN_GENERATED_KEYS;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
-import ru.sentyurin.db.ConnectionManager;
+import org.hibernate.Session;
+
+import ru.sentyurin.db.ConnectionManagerHiber;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.model.Movie;
 import ru.sentyurin.repository.mapper.MovieResultSetMapper;
@@ -18,38 +14,21 @@ import ru.sentyurin.util.exception.InconsistentInputException;
 import ru.sentyurin.util.exception.IncorrectInputException;
 import ru.sentyurin.util.exception.NoDataInRepositoryException;
 
-public class MovieRepository implements Repository<Movie, Integer> {
+public class MovieRepositoryHiber implements Repository<Movie, Integer> {
 
-	private static final String GET_ALL_MOVIES_SQL = "select m.id as id, "
-			+ "m.title as title, m.release_year as release_year, "
-			+ "d.id as director_id, d.name as director_name "
-			+ "from Movie as m left join Director as d on d.id = m.director_id " + "order by m.id";
+	private static final String GET_ALL_MOVIES_HQL = "from Movie m left join fetch m.director order by m.id";
 
-	private static final String GET_ALL_MOVIES_BY_DIRECTOR_ID_SQL = "select m.id as id, "
-			+ "m.title as title, m.release_year as release_year, "
-			+ "d.id as director_id, d.name as director_name "
-			+ "from Movie as m left join Director as d on d.id = m.director_id where d.id=? order by m.id";
+	private static final String GET_ALL_MOVIES_BY_DIRECTOR_ID_HQL = """
+			from Movie m left join fetch m.director
+			where m.director.id = :id order by m.id""";
 
-	private static final String GET_MOVIE_BY_ID_SQL = "select m.id as id, "
-			+ "m.title as title, m.release_year as release_year, "
-			+ "d.id as director_id, d.name as director_name "
-			+ "from Movie as m left join Director as d on d.id = m.director_id " + "where m.id = ?";
+	private static final String GET_MOVIE_BY_ID_HQL = "from Movie m left join fetch m.director where m.id = :id";
 
-	private static final String GET_MOVIE_BY_TITLE_SQL = "select m.id as id, "
-			+ "m.title as title, m.release_year as release_year, "
-			+ "d.id as director_id, d.name as director_name "
-			+ "from Movie as m left join Director as d on d.id = m.director_id "
-			+ "where m.title = ?";
-
-	private static final String SAVE_MOVIE_SQL = "insert into Movie(title, release_year, director_id) values (?,?,?)";
-
-	private static final String DELETE_BY_ID_SQL = "delete from Movie where id = ?";
+	private static final String GET_MOVIE_BY_TITLE_HQL = """
+			from Movie m left join fetch m.director
+			where m.title = :title""";
 
 	private static final String DELETE_BY_DIRECTOR_ID_SQL = "delete from Movie where director_id=?";
-
-	private static final String UPDATE_BY_ID_SQL = "update Movie set title=?, release_year=?, director_id=? where id=?";
-
-	private static final String CHECK_BY_ID_SQL = "select id from Movie where id=?";
 
 	private static final String INIT_TABLE_MOVIE_SQL = """
 			create table if not exists Movie (
@@ -58,17 +37,17 @@ public class MovieRepository implements Repository<Movie, Integer> {
 			director_id int NOT NULL) """;
 
 	private final MovieResultSetMapper resultSetMapper;
-	private ConnectionManager connectionManager;
+	private ConnectionManagerHiber connectionManager;
 	private Repository<Director, Integer> directorRepository;
 
-	public MovieRepository() {
+	public MovieRepositoryHiber() {
 		resultSetMapper = new MovieResultSetMapper();
 	}
 
 	/**
 	 * Returns {@code ConnectionManager}
 	 */
-	public ConnectionManager getConnectionManager() {
+	public ConnectionManagerHiber getConnectionManager() {
 		return connectionManager;
 	}
 
@@ -85,7 +64,7 @@ public class MovieRepository implements Repository<Movie, Integer> {
 	 * @param connectionManager
 	 */
 	@Override
-	public void setConnectionManager(ConnectionManager connectionManager) {
+	public void setConnectionManager(ConnectionManagerHiber connectionManager) {
 		this.connectionManager = connectionManager;
 	}
 
@@ -134,21 +113,13 @@ public class MovieRepository implements Repository<Movie, Integer> {
 					() -> new NoDataInRepositoryException("There is no director with this ID"));
 		}
 
-		try (Connection connection = connectionManager.getConnection();
-				PreparedStatement statement = connection.prepareStatement(SAVE_MOVIE_SQL,
-						RETURN_GENERATED_KEYS);) {
-			statement.setString(1, movie.getTitle());
-			statement.setInt(2, movie.getReleaseYear());
-			statement.setInt(3, directorInDB.getId());
-			statement.executeUpdate();
-			ResultSet resultSet = statement.getGeneratedKeys();
-			if (resultSet.next()) {
-				Integer movieId = resultSet.getInt("id");
-				movie.setId(movieId);
-			}
+		try (Session session = connectionManager.openSession()) {
+			session.beginTransaction();
 			movie.setDirector(directorInDB);
+			session.persist(movie);
+			session.getTransaction().commit();
 			return movie;
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			throw new DataBaseException(e.getMessage());
 		}
 	}
@@ -158,11 +129,12 @@ public class MovieRepository implements Repository<Movie, Integer> {
 	 */
 	@Override
 	public List<Movie> findAll() {
-		try (Connection connection = connectionManager.getConnection();
-				PreparedStatement statement = connection.prepareStatement(GET_ALL_MOVIES_SQL);
-				ResultSet resultSet = statement.executeQuery()) {
-			return resultSetMapper.map(resultSet);
-		} catch (SQLException e) {
+		try (Session session = connectionManager.openSession()) {
+			session.beginTransaction();
+			List<Movie> movies = session.createQuery(GET_ALL_MOVIES_HQL, Movie.class).list();
+			session.getTransaction().commit();
+			return movies;
+		} catch (Exception e) {
 			throw new DataBaseException(e.getMessage());
 		}
 	}
@@ -172,15 +144,13 @@ public class MovieRepository implements Repository<Movie, Integer> {
 	 */
 	@Override
 	public Optional<Movie> findById(Integer id) {
-		try (Connection connection = connectionManager.getConnection();
-				PreparedStatement statement = connection.prepareStatement(GET_MOVIE_BY_ID_SQL)) {
-			statement.setInt(1, id);
-			ResultSet resultSet = statement.executeQuery();
-			List<Movie> movies = resultSetMapper.map(resultSet);
-			if (movies.isEmpty())
-				return Optional.empty();
-			return Optional.of(movies.get(0));
-		} catch (SQLException e) {
+		try (Session session = connectionManager.openSession()) {
+			session.beginTransaction();
+			Optional<Movie> maybeMovie = session.createQuery(GET_MOVIE_BY_ID_HQL, Movie.class)
+					.setParameter("id", id).uniqueResultOptional();
+			session.getTransaction().commit();
+			return maybeMovie;
+		} catch (Exception e) {
 			throw new DataBaseException(e.getMessage());
 		}
 	}
@@ -194,11 +164,15 @@ public class MovieRepository implements Repository<Movie, Integer> {
 	 */
 	@Override
 	public boolean deleteById(Integer id) {
-		try (Connection connection = connectionManager.getConnection();
-				PreparedStatement statement = connection.prepareStatement(DELETE_BY_ID_SQL)) {
-			statement.setInt(1, id);
-			return statement.executeUpdate() == 1;
-		} catch (SQLException e) {
+		try (Session session = connectionManager.openSession()) {
+			session.beginTransaction();
+			Movie movieToDelete = session.get(Movie.class, id);
+			if (movieToDelete != null) {
+				session.remove(movieToDelete);
+			}
+			session.getTransaction().commit();
+			return movieToDelete != null;
+		} catch (Exception e) {
 			throw new DataBaseException(e.getMessage());
 		}
 	}
@@ -211,12 +185,11 @@ public class MovieRepository implements Repository<Movie, Integer> {
 	 *         another case
 	 */
 	public boolean deleteByDirectorId(Integer id) {
-		try (Connection connection = connectionManager.getConnection();
-				PreparedStatement statement = connection
-						.prepareStatement(DELETE_BY_DIRECTOR_ID_SQL)) {
-			statement.setInt(1, id);
-			return statement.executeUpdate() > 0;
-		} catch (SQLException e) {
+		try (Session session = connectionManager.openSession()) {
+			session.beginTransaction();
+//			TODO
+			return false;
+		} catch (Exception e) {
 			throw new DataBaseException(e.getMessage());
 		}
 	}
@@ -270,15 +243,12 @@ public class MovieRepository implements Repository<Movie, Integer> {
 			director = directorRepository.save(director);
 			movie.setDirector(director);
 		}
-		try (Connection connection = connectionManager.getConnection();
-				PreparedStatement statement = connection.prepareStatement(UPDATE_BY_ID_SQL)) {
-			statement.setString(1, movie.getTitle());
-			statement.setInt(2, movie.getReleaseYear());
-			statement.setInt(3, director.getId());
-			statement.setInt(4, movie.getId());
-			statement.executeUpdate();
+		try (Session session = connectionManager.openSession()) {
+			session.beginTransaction();
+			session.merge(movie);
+			session.getTransaction().commit();
 			return Optional.of(movie);
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			throw new DataBaseException(e.getMessage());
 		}
 	}
@@ -291,12 +261,12 @@ public class MovieRepository implements Repository<Movie, Integer> {
 	 */
 	@Override
 	public boolean isPresentWithId(Integer id) {
-		try (Connection connection = connectionManager.getConnection();
-				PreparedStatement statement = connection.prepareStatement(CHECK_BY_ID_SQL)) {
-			statement.setInt(1, id);
-			ResultSet resultSet = statement.executeQuery();
-			return resultSet.next();
-		} catch (SQLException e) {
+		try (Session session = connectionManager.openSession()) {
+			session.beginTransaction();
+			Movie movie = session.get(Movie.class, id);
+			session.getTransaction().commit();
+			return movie != null;
+		} catch (Exception e) {
 			throw new DataBaseException(e.getMessage());
 		}
 	}
@@ -305,39 +275,25 @@ public class MovieRepository implements Repository<Movie, Integer> {
 	 * Returns all movie entities with specified director ID from DB.
 	 */
 	public List<Movie> findByDirectorId(Integer id) {
-		try (Connection connection = connectionManager.getConnection();
-				PreparedStatement statement = connection
-						.prepareStatement(GET_ALL_MOVIES_BY_DIRECTOR_ID_SQL)) {
-			statement.setInt(1, id);
-			return resultSetMapper.map(statement.executeQuery());
-		} catch (SQLException e) {
-			throw new DataBaseException(e.getMessage());
-		}
-	}
-
-	/**
-	 * Creates a table in DB to persist movie entities if it doesn't exist yet.
-	 */
-	@Override
-	public void initDb() {
-		try (Connection connection = connectionManager.getConnection();
-				PreparedStatement statement = connection.prepareStatement(INIT_TABLE_MOVIE_SQL)) {
-			statement.executeUpdate();
-		} catch (SQLException e) {
+		try (Session session = connectionManager.openSession()) {
+			session.beginTransaction();
+			List<Movie> movies = session.createQuery(GET_ALL_MOVIES_BY_DIRECTOR_ID_HQL, Movie.class)
+					.setParameter(":id", id).list();
+			session.getTransaction().commit();
+			return movies;
+		} catch (Exception e) {
 			throw new DataBaseException(e.getMessage());
 		}
 	}
 
 	private Optional<Movie> findByTitle(String title) {
-		try (Connection connection = connectionManager.getConnection();
-				PreparedStatement statement = connection.prepareStatement(GET_MOVIE_BY_TITLE_SQL)) {
-			statement.setString(1, title);
-			ResultSet resultSet = statement.executeQuery();
-			List<Movie> movies = resultSetMapper.map(resultSet);
-			if (movies.isEmpty())
-				return Optional.empty();
-			return Optional.of(movies.get(0));
-		} catch (SQLException e) {
+		try (Session session = connectionManager.openSession()) {
+			session.beginTransaction();
+			Optional<Movie> maybeMovie = session.createQuery(GET_MOVIE_BY_TITLE_HQL, Movie.class)
+					.setParameter("title", title).uniqueResultOptional();
+			session.getTransaction().commit();
+			return maybeMovie;
+		} catch (Exception e) {
 			throw new DataBaseException(e.getMessage());
 		}
 	}

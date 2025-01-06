@@ -3,7 +3,7 @@ package ru.sentyurin.repository;
 import java.util.List;
 import java.util.Optional;
 
-import ru.sentyurin.db.ConnectionManager;
+import ru.sentyurin.db.ConnectionManagerHiber;
 
 public interface Repository<T, K> {
 	/**
@@ -55,17 +55,17 @@ public interface Repository<T, K> {
 	 * 
 	 * @return
 	 */
-	public ConnectionManager getConnectionManager();
+	public ConnectionManagerHiber getConnectionManager();
 
 	/**
 	 * 
 	 * @param connectionManager
 	 */
-	public void setConnectionManager(ConnectionManager connectionManager);
+	public void setConnectionManager(ConnectionManagerHiber connectionManager);
 
 	/**
 	 * 
 	 */
-	void initDb();
+//	void initDb();
 
 }

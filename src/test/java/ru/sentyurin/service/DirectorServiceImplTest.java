@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import ru.sentyurin.model.Director;
-import ru.sentyurin.repository.DirectorRepository;
+import ru.sentyurin.repository.DirectorRepositoryHiber;
 import ru.sentyurin.service.impl.DirectorServiceImpl;
 import ru.sentyurin.servlet.dto.DirectorIncomingDto;
 import ru.sentyurin.servlet.dto.DirectorOutgoingDto;
@@ -22,12 +22,12 @@ import ru.sentyurin.util.exception.IncompleateInputExeption;
 class DirectorServiceImplTest {
 
 	private DirectorServiceImpl directorService;
-	private DirectorRepository directorRepository;
+	private DirectorRepositoryHiber directorRepository;
 	private DirectorDtoMapperImpl mapper;
 
 	@BeforeEach
 	void init() {
-		directorRepository = Mockito.mock(DirectorRepository.class);
+		directorRepository = Mockito.mock(DirectorRepositoryHiber.class);
 
 		directorService = new DirectorServiceImpl();
 		directorService.setDirectorRepository(directorRepository);

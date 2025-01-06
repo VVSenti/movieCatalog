@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
 
+import ru.sentyurin.db.ConnectionManagerHiber;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.model.Movie;
 import ru.sentyurin.util.exception.InconsistentInputException;
@@ -24,8 +25,8 @@ class MovieRepositoryTest {
 
 	static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
 
-	private MovieRepository movieRepository;
-	private DBConnectionProvider connectionManager;
+	private MovieRepositoryHiber movieRepository;
+	private ConnectionManagerHiber connectionManager;
 
 	@BeforeAll
 	static void beforeAll() {
@@ -39,12 +40,10 @@ class MovieRepositoryTest {
 
 	@BeforeEach
 	void init() {
-		connectionManager = new DBConnectionProvider(postgres.getJdbcUrl(),
-				postgres.getUsername(), postgres.getPassword());
-		movieRepository = (MovieRepository) RepositoryFactory.getRepository(Movie.class, Integer.class);
-		RepositoryFactory.setConnectionManager(connectionManager);
-		// cleans up repository before test
-		movieRepository.findAll().forEach(d -> movieRepository.deleteById(d.getId()));
+		movieRepository = (MovieRepositoryHiber) RepositoryFactoryHiber.getRepository(Movie.class,
+				Integer.class);
+		connectionManager = new ConnectionToTestDbManagerHiber(postgres);
+		RepositoryFactoryHiber.setConnectionManager(connectionManager);
 	}
 
 	@Test
