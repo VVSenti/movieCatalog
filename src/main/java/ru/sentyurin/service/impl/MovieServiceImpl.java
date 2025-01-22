@@ -23,7 +23,7 @@ public class MovieServiceImpl implements MovieService {
 	private final MovieDtoMapper dtoMapper;
 	
 	@Autowired
-	public MovieServiceImpl(MovieRepositoryHiber movieRepositoryHiber, MovieDtoMapper movieDtoMapper) {
+	public MovieServiceImpl(Repository<Movie, Integer> movieRepositoryHiber, MovieDtoMapper movieDtoMapper) {
 		movieRepository = movieRepositoryHiber;
 		dtoMapper = movieDtoMapper;
 	}

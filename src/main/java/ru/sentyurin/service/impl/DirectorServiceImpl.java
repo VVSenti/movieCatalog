@@ -10,7 +10,6 @@ import ru.sentyurin.controller.dto.DirectorIncomingDto;
 import ru.sentyurin.controller.dto.DirectorOutgoingDto;
 import ru.sentyurin.controller.mapper.DirectorDtoMapper;
 import ru.sentyurin.model.Director;
-import ru.sentyurin.repository.DirectorRepositoryHiber;
 import ru.sentyurin.repository.Repository;
 import ru.sentyurin.service.DirectorService;
 import ru.sentyurin.util.exception.IncompleateInputExeption;
@@ -22,7 +21,7 @@ public class DirectorServiceImpl implements DirectorService {
 	private final DirectorDtoMapper dtoMapper;
 
 	@Autowired
-	public DirectorServiceImpl(DirectorRepositoryHiber directorRepositoryHiber,
+	public DirectorServiceImpl(Repository<Director, Integer> directorRepositoryHiber,
 			DirectorDtoMapper directorDtoMapper) {
 		directorRepository = directorRepositoryHiber;
 		dtoMapper = directorDtoMapper;

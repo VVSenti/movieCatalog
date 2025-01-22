@@ -6,7 +6,7 @@ import org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy;
 import org.hibernate.cfg.Configuration;
 import org.springframework.stereotype.Component;
 
-@Component
+//@Component
 public class ConnectionToDbManagerHiber implements ConnectionManagerHiber {
 
 	private final Configuration configuration;

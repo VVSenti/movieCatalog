@@ -4,7 +4,9 @@ import java.util.List;
 import java.util.Optional;
 
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import ru.sentyurin.db.ConnectionManagerHiber;
 import ru.sentyurin.model.Director;
@@ -22,18 +24,11 @@ public class DirectorRepositoryHiber implements Repository<Director, Integer> {
 
 	private static final String DELETE_MOVIES_BY_DIRECTOR_ID_SQL = "delete from Movie where director_id=?";
 
-	private final ConnectionManagerHiber connectionManager;
-	
-	@Autowired
-	public DirectorRepositoryHiber(ConnectionManagerHiber connectionManager) {
-		this.connectionManager = connectionManager;
-	}
+	private final SessionFactory sessionFactory;
 
-	/**
-	 * Returns {@code ConnectionManager}
-	 */
-	public ConnectionManagerHiber getConnectionManager() {
-		return connectionManager;
+	@Autowired
+	public DirectorRepositoryHiber(SessionFactory sessionFactory) {
+		this.sessionFactory = sessionFactory;
 	}
 
 	/**
@@ -43,50 +38,36 @@ public class DirectorRepositoryHiber implements Repository<Director, Integer> {
 	 * @return saved director entity
 	 */
 	@Override
+	@Transactional
 	public Director save(Director director) {
 		Optional<Director> directorInDB = findByName(director.getName());
 		if (directorInDB.isPresent()) {
 			return directorInDB.get();
 		}
-		try (Session session = connectionManager.openSession()) {
-			session.beginTransaction();
-			session.persist(director);
-			session.getTransaction().commit();
-			return director;
-		} catch (Exception e) {
-			throw new DataBaseException(e.getMessage());
-		}
+		Session session = sessionFactory.getCurrentSession();
+		session.persist(director);
+		return director;
 	}
 
 	/**
 	 * Returns all director entities from DB. Fields {@code movies} will be null.
 	 */
 	@Override
+	@Transactional
 	public List<Director> findAll() {
-		try (Session session = connectionManager.openSession()) {
-			session.beginTransaction();
-			List<Director> directors = session.createQuery(GET_ALL_HQL, Director.class).list();
-			session.getTransaction().commit();
-			return directors;
-		} catch (Exception e) {
-			throw new DataBaseException(e.getMessage());
-		}
+		Session session = sessionFactory.getCurrentSession();
+		return session.createQuery(GET_ALL_HQL, Director.class).list();
 	}
 
 	/**
 	 * Returns a director entity with specified ID from DB.
 	 */
 	@Override
+	@Transactional
 	public Optional<Director> findById(Integer id) {
-		try (Session session = connectionManager.openSession()) {
-			session.beginTransaction();
-			Optional<Director> maybeDirector = session.createQuery(GET_BY_ID_HQL, Director.class)
-					.setParameter("id", id).uniqueResultOptional();
-			session.getTransaction().commit();
-			return maybeDirector;
-		} catch (Exception e) {
-			throw new DataBaseException(e.getMessage());
-		}
+		Session session = sessionFactory.getCurrentSession();
+		return session.createQuery(GET_BY_ID_HQL, Director.class).setParameter("id", id)
+				.uniqueResultOptional();
 	}
 
 	/**
@@ -97,18 +78,14 @@ public class DirectorRepositoryHiber implements Repository<Director, Integer> {
 	 *         another case
 	 */
 	@Override
+	@Transactional
 	public boolean deleteById(Integer id) {
-		try (Session session = connectionManager.openSession()) {
-			session.beginTransaction();
-			Director director = session.get(Director.class, id);
-			if (director != null) {
-				session.remove(director);
-			}
-			session.getTransaction().commit();
-			return director != null;
-		} catch (Exception e) {
-			throw new DataBaseException(e.getMessage());
+		Session session = sessionFactory.getCurrentSession();
+		Director director = session.get(Director.class, id);
+		if (director != null) {
+			session.remove(director);
 		}
+		return director != null;
 	}
 
 	/**
@@ -120,22 +97,16 @@ public class DirectorRepositoryHiber implements Repository<Director, Integer> {
 	 * @return updated movie entity
 	 */
 	@Override
+	@Transactional
 	public Optional<Director> update(Director director) {
-		try (Session session = connectionManager.openSession()) {
-			session.beginTransaction();
-			Director directorToUpdate = session.get(Director.class, director.getId());
-			if (directorToUpdate == null) {
-				session.getTransaction().rollback();
-				throw new NoDataInRepositoryException("There is no director with this id");
-			}
-			session.merge(director);
-			session.getTransaction().commit();
-			return Optional.of(director);
-		} catch (NoDataInRepositoryException e) {
-			throw e;
-		} catch (Exception e) {
-			throw new DataBaseException(e.getMessage());
+		Session session = sessionFactory.getCurrentSession();
+		Director directorToUpdate = session.get(Director.class, director.getId());
+		if (directorToUpdate == null) {
+			session.getTransaction().rollback();
+			throw new NoDataInRepositoryException("There is no director with this id");
 		}
+		session.merge(director);
+		return Optional.of(director);
 	}
 
 	/**
@@ -145,26 +116,16 @@ public class DirectorRepositoryHiber implements Repository<Director, Integer> {
 	 *         in another case
 	 */
 	@Override
+	@Transactional
 	public boolean isPresentWithId(Integer id) {
-		try (Session session = connectionManager.openSession()) {
-			session.beginTransaction();
-			Director director = session.get(Director.class, id);
-			session.getTransaction().commit();
-			return director != null;
-		} catch (Exception e) {
-			throw new DataBaseException(e.getMessage());
-		}
+		Session session = sessionFactory.getCurrentSession();
+		Director director = session.get(Director.class, id);
+		return director != null;
 	}
 
 	private Optional<Director> findByName(String name) {
-		try (Session session = connectionManager.openSession()) {
-			session.beginTransaction();
-			Optional<Director> maybeDirector = session.createQuery(GET_BY_NAME_HQL, Director.class)
-					.setParameter("name", name).uniqueResultOptional();
-			session.getTransaction().commit();
-			return maybeDirector;
-		} catch (Exception e) {
-			throw new DataBaseException(e.getMessage());
-		}
+		Session session = sessionFactory.getCurrentSession();
+		return session.createQuery(GET_BY_NAME_HQL, Director.class).setParameter("name", name)
+				.uniqueResultOptional();
 	}
 }
