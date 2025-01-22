@@ -26,9 +26,10 @@ import org.mockito.stubbing.Answer;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ru.sentyurin.controller.MovieController;
+import ru.sentyurin.controller.dto.MovieIncomingDto;
+import ru.sentyurin.controller.dto.MovieOutgoingDto;
 import ru.sentyurin.service.MovieService;
-import ru.sentyurin.servlet.dto.MovieIncomingDto;
-import ru.sentyurin.servlet.dto.MovieOutgoingDto;
 import ru.sentyurin.util.exception.IncompleateInputExeption;
 import ru.sentyurin.util.exception.InconsistentInputException;
 import ru.sentyurin.util.exception.IncorrectInputException;
@@ -37,7 +38,7 @@ import ru.sentyurin.util.exception.NoDataInRepositoryException;
 class MovieServletTest {
 
 	private MovieService service;
-	private MovieServlet servlet;
+	private MovieController controller;
 	private StringWriter responseStringWriter;
 	private PrintWriter responsePrintWriter;
 	private ObjectMapper objectMapper;
@@ -50,14 +51,15 @@ class MovieServletTest {
 
 		objectMapper = new ObjectMapper();
 
-		servlet = new MovieServlet();
+//		servlet = new MovieServlet();
+		controller = null;
 		service = Mockito.mock(MovieService.class);
 
 		Field serviceField;
 		try {
-			serviceField = MovieServlet.class.getDeclaredField("movieService");
+			serviceField = MovieController.class.getDeclaredField("movieService");
 			serviceField.setAccessible(true);
-			serviceField.set(servlet, service);
+			serviceField.set(controller, service);
 			serviceField.setAccessible(false);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -85,7 +87,7 @@ class MovieServletTest {
 		Mockito.when(service.getMovies()).thenReturn(moviesOutgoingDtos);
 
 		Mockito.when(request.getParameter("id")).thenReturn(null);
-		servlet.doGet(request, response);
+		controller.doGet(request, response);
 		List<MovieOutgoingDto> movieDtos = objectMapper.readValue(responseStringWriter.toString(),
 				new TypeReference<List<MovieOutgoingDto>>() {
 				});
@@ -100,7 +102,7 @@ class MovieServletTest {
 		Mockito.when(service.getMovieById(movieIdToGet))
 				.thenReturn(Optional.of(new MovieOutgoingDto()));
 
-		servlet.doGet(request, response);
+		controller.doGet(request, response);
 		MovieOutgoingDto movieDto = objectMapper.readValue(responseStringWriter.toString(),
 				MovieOutgoingDto.class);
 		assertNotNull(movieDto);
@@ -110,7 +112,7 @@ class MovieServletTest {
 	void shouldReturnCorrectStatusWhenGetWithIncorrrectIdFormat()
 			throws ServletException, IOException {
 		Mockito.when(request.getParameter("id")).thenReturn("4.5");
-		servlet.doGet(request, response);
+		controller.doGet(request, response);
 		assertEquals(400, responseStatus.get());
 	}
 
@@ -119,7 +121,7 @@ class MovieServletTest {
 		Integer movieIdToGet = 2;
 		Mockito.when(request.getParameter("id")).thenReturn(movieIdToGet.toString());
 		Mockito.when(service.getMovieById(movieIdToGet)).thenReturn(Optional.empty());
-		servlet.doGet(request, response);
+		controller.doGet(request, response);
 		assertEquals(404, responseStatus.get());
 	}
 
@@ -127,7 +129,7 @@ class MovieServletTest {
 	void shouldReturnCorrectStatusWhenDeleteWithIncorrrectIdFormat()
 			throws ServletException, IOException {
 		Mockito.when(request.getParameter("id")).thenReturn("4.5");
-		servlet.doDelete(request, response);
+		controller.doDelete(request, response);
 		assertEquals(400, responseStatus.get());
 	}
 
@@ -137,7 +139,7 @@ class MovieServletTest {
 		Integer movieIdToDelete = 2;
 		Mockito.when(request.getParameter("id")).thenReturn(movieIdToDelete.toString());
 		Mockito.when(service.deleteMovie(movieIdToDelete)).thenReturn(false);
-		servlet.doDelete(request, response);
+		controller.doDelete(request, response);
 		assertEquals(404, responseStatus.get());
 	}
 
@@ -146,7 +148,7 @@ class MovieServletTest {
 		Integer movieIdToDelete = 2;
 		Mockito.when(request.getParameter("id")).thenReturn(movieIdToDelete.toString());
 		Mockito.when(service.deleteMovie(movieIdToDelete)).thenReturn(true);
-		servlet.doDelete(request, response);
+		controller.doDelete(request, response);
 		assertEquals(200, responseStatus.get());
 	}
 
@@ -154,7 +156,7 @@ class MovieServletTest {
 	void shouldReturnCorrectStatusWhenDeleteWithoutIdPathVariable()
 			throws ServletException, IOException {
 		Mockito.when(request.getParameter("id")).thenReturn(null);
-		servlet.doDelete(request, response);
+		controller.doDelete(request, response);
 		assertEquals(400, responseStatus.get());
 	}
 
@@ -165,7 +167,7 @@ class MovieServletTest {
 				.thenReturn(new MovieOutgoingDto());
 
 		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader(json)));
-		servlet.doPost(request, response);
+		controller.doPost(request, response);
 		assertEquals(201, responseStatus.get());
 	}
 
@@ -173,7 +175,7 @@ class MovieServletTest {
 	void shouldReturnCorrectStatusWhenPostWithInvalidJsonRequestBody()
 			throws IOException, ServletException {
 		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader("asd")));
-		servlet.doPost(request, response);
+		controller.doPost(request, response);
 		assertEquals(400, responseStatus.get());
 	}
 
@@ -185,7 +187,7 @@ class MovieServletTest {
 				.thenThrow(new IncompleateInputExeption(""));
 
 		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader(json)));
-		servlet.doPost(request, response);
+		controller.doPost(request, response);
 		assertEquals(400, responseStatus.get());
 	}
 
@@ -197,7 +199,7 @@ class MovieServletTest {
 				.thenThrow(new NoDataInRepositoryException(""));
 
 		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader(json)));
-		servlet.doPost(request, response);
+		controller.doPost(request, response);
 		assertEquals(400, responseStatus.get());
 	}
 
@@ -209,7 +211,7 @@ class MovieServletTest {
 				.thenThrow(new InconsistentInputException(""));
 
 		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader(json)));
-		servlet.doPost(request, response);
+		controller.doPost(request, response);
 		assertEquals(400, responseStatus.get());
 	}
 
@@ -222,7 +224,7 @@ class MovieServletTest {
 		Mockito.when(request.getParameter("id")).thenReturn(movieIdToUpdate.toString());
 		Mockito.when(service.updateMovie(Mockito.any(MovieIncomingDto.class)))
 				.thenReturn(new MovieOutgoingDto());
-		servlet.doPut(request, response);
+		controller.doPut(request, response);
 		MovieOutgoingDto movieDto = objectMapper.readValue(responseStringWriter.toString(),
 				MovieOutgoingDto.class);
 		assertNotNull(movieDto);
@@ -236,7 +238,7 @@ class MovieServletTest {
 				.thenThrow(new IncorrectInputException(""));
 
 		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader(json)));
-		servlet.doPut(request, response);
+		controller.doPut(request, response);
 		assertEquals(400, responseStatus.get());
 	}
 
@@ -244,7 +246,7 @@ class MovieServletTest {
 	void shouldReturnCorrectStatusWhenUpdateWithInvalidJsonRequestBody()
 			throws IOException, ServletException {
 		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader("asd")));
-		servlet.doPut(request, response);
+		controller.doPut(request, response);
 		assertEquals(400, responseStatus.get());
 	}
 
@@ -256,7 +258,7 @@ class MovieServletTest {
 				.thenThrow(new IncompleateInputExeption(""));
 
 		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader(json)));
-		servlet.doPut(request, response);
+		controller.doPut(request, response);
 		assertEquals(400, responseStatus.get());
 	}
 
@@ -267,7 +269,7 @@ class MovieServletTest {
 				.thenThrow(new NoDataInRepositoryException(""));
 
 		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader(json)));
-		servlet.doPut(request, response);
+		controller.doPut(request, response);
 		assertEquals(404, responseStatus.get());
 	}
 
@@ -279,7 +281,7 @@ class MovieServletTest {
 				.thenThrow(new InconsistentInputException(""));
 
 		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader(json)));
-		servlet.doPut(request, response);
+		controller.doPut(request, response);
 		assertEquals(400, responseStatus.get());
 	}
 

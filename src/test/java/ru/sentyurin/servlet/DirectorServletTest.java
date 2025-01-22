@@ -26,15 +26,16 @@ import org.mockito.stubbing.Answer;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ru.sentyurin.controller.DirectorController;
+import ru.sentyurin.controller.dto.DirectorIncomingDto;
+import ru.sentyurin.controller.dto.DirectorOutgoingDto;
 import ru.sentyurin.service.DirectorService;
-import ru.sentyurin.servlet.dto.DirectorIncomingDto;
-import ru.sentyurin.servlet.dto.DirectorOutgoingDto;
 import ru.sentyurin.util.exception.IncompleateInputExeption;
 import ru.sentyurin.util.exception.NoDataInRepositoryException;
 
 class DirectorServletTest {
 	private DirectorService service;
-	private DirectorServlet servlet;
+	private DirectorController servlet;
 	private StringWriter responseStringWriter;
 	private PrintWriter responsePrintWriter;
 	private ObjectMapper objectMapper = new ObjectMapper();
@@ -44,12 +45,13 @@ class DirectorServletTest {
 
 	@BeforeEach
 	void init() throws IOException {
-		servlet = new DirectorServlet();
+//		servlet = new DirectorServlet();
+		servlet = null;
 		service = Mockito.mock(DirectorService.class);
 		
 		Field serviceField;
 		try {
-			serviceField = DirectorServlet.class.getDeclaredField("directorService");
+			serviceField = DirectorController.class.getDeclaredField("directorService");
 			serviceField.setAccessible(true);
 			serviceField.set(servlet, service);
 			serviceField.setAccessible(false);

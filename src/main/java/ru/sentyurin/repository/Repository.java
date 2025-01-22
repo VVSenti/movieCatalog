@@ -57,11 +57,6 @@ public interface Repository<T, K> {
 	 */
 	public ConnectionManagerHiber getConnectionManager();
 
-	/**
-	 * 
-	 * @param connectionManager
-	 */
-	public void setConnectionManager(ConnectionManagerHiber connectionManager);
 
 	/**
 	 * 

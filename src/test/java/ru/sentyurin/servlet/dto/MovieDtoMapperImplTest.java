@@ -10,10 +10,12 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import ru.sentyurin.controller.dto.MovieIncomingDto;
+import ru.sentyurin.controller.dto.MovieOutgoingDto;
+import ru.sentyurin.controller.mapper.MovieDtoMapper;
+import ru.sentyurin.controller.mapper.MovieDtoMapperImpl;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.model.Movie;
-import ru.sentyurin.servlet.mapper.MovieDtoMapper;
-import ru.sentyurin.servlet.mapper.MovieDtoMapperImpl;
 
 class MovieDtoMapperImplTest {
 	

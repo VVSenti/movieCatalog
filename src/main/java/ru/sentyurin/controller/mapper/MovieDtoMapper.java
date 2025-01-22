@@ -1,8 +1,8 @@
-package ru.sentyurin.servlet.mapper;
+package ru.sentyurin.controller.mapper;
 
+import ru.sentyurin.controller.dto.MovieIncomingDto;
+import ru.sentyurin.controller.dto.MovieOutgoingDto;
 import ru.sentyurin.model.Movie;
-import ru.sentyurin.servlet.dto.MovieIncomingDto;
-import ru.sentyurin.servlet.dto.MovieOutgoingDto;
 
 public interface MovieDtoMapper {
 

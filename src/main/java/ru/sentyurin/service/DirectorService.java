@@ -3,8 +3,8 @@ package ru.sentyurin.service;
 import java.util.List;
 import java.util.Optional;
 
-import ru.sentyurin.servlet.dto.DirectorIncomingDto;
-import ru.sentyurin.servlet.dto.DirectorOutgoingDto;
+import ru.sentyurin.controller.dto.DirectorIncomingDto;
+import ru.sentyurin.controller.dto.DirectorOutgoingDto;
 
 public interface DirectorService {
 

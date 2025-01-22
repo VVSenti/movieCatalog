@@ -1,14 +1,18 @@
-package ru.sentyurin.servlet.mapper;
+package ru.sentyurin.controller.mapper;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.Comment;
+import org.springframework.stereotype.Component;
+
+import ru.sentyurin.controller.dto.DirectorIncomingDto;
+import ru.sentyurin.controller.dto.DirectorOutgoingDto;
+import ru.sentyurin.controller.dto.MovieOutgoingDto;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.model.Movie;
-import ru.sentyurin.servlet.dto.DirectorIncomingDto;
-import ru.sentyurin.servlet.dto.DirectorOutgoingDto;
-import ru.sentyurin.servlet.dto.MovieOutgoingDto;
 
+@Component
 public class DirectorDtoMapperImpl implements DirectorDtoMapper {
 	
 	MovieDtoMapper movieDtoMapper = new MovieDtoMapperImpl();

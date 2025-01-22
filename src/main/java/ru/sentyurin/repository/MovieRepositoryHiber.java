@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.hibernate.Session;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ru.sentyurin.db.ConnectionManagerHiber;
 import ru.sentyurin.model.Director;
@@ -13,6 +14,7 @@ import ru.sentyurin.util.exception.InconsistentInputException;
 import ru.sentyurin.util.exception.IncorrectInputException;
 import ru.sentyurin.util.exception.NoDataInRepositoryException;
 
+@org.springframework.stereotype.Repository
 public class MovieRepositoryHiber implements Repository<Movie, Integer> {
 
 	private static final String GET_ALL_MOVIES_HQL = "from Movie m left join fetch m.director order by m.id";
@@ -35,9 +37,15 @@ public class MovieRepositoryHiber implements Repository<Movie, Integer> {
 			title varchar UNIQUE NOT NULL, release_year int NOT NULL,
 			director_id int NOT NULL) """;
 
-	private ConnectionManagerHiber connectionManager;
-	private Repository<Director, Integer> directorRepository;
+	private final ConnectionManagerHiber connectionManager;
+	private final Repository<Director, Integer> directorRepository;
 
+	@Autowired
+	public MovieRepositoryHiber(ConnectionManagerHiber connectionManager,
+			DirectorRepositoryHiber directorRepository) {
+		this.connectionManager = connectionManager;
+		this.directorRepository = directorRepository;
+	}
 
 	/**
 	 * Returns {@code ConnectionManager}
@@ -51,25 +59,6 @@ public class MovieRepositoryHiber implements Repository<Movie, Integer> {
 	 */
 	public Repository<Director, Integer> getDirectorRepository() {
 		return directorRepository;
-	}
-
-	/**
-	 * Sets {@code ConnectionManager}
-	 * 
-	 * @param connectionManager
-	 */
-	@Override
-	public void setConnectionManager(ConnectionManagerHiber connectionManager) {
-		this.connectionManager = connectionManager;
-	}
-
-	/**
-	 * Sets a repository of director entities
-	 * 
-	 * @param directorRepository
-	 */
-	public void setDirectorRepository(Repository<Director, Integer> directorRepository) {
-		this.directorRepository = directorRepository;
 	}
 
 	/**

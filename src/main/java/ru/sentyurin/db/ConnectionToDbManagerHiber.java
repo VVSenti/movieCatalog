@@ -4,16 +4,17 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy;
 import org.hibernate.cfg.Configuration;
+import org.springframework.stereotype.Component;
 
-public class ConnectionToDbManagerHiber implements ConnectionManagerHiber{
+@Component
+public class ConnectionToDbManagerHiber implements ConnectionManagerHiber {
 
 	private final Configuration configuration;
 	private final SessionFactory sessionFactory;
 
 	public ConnectionToDbManagerHiber() {
-		configuration = new Configuration();
-		configuration.configure();
-		configuration.setPhysicalNamingStrategy(new CamelCaseToUnderscoresNamingStrategy());
+		configuration = new Configuration().configure()
+				.setPhysicalNamingStrategy(new CamelCaseToUnderscoresNamingStrategy());
 		sessionFactory = configuration.buildSessionFactory();
 	}
 

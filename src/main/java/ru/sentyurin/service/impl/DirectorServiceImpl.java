@@ -3,24 +3,29 @@ package ru.sentyurin.service.impl;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import ru.sentyurin.controller.dto.DirectorIncomingDto;
+import ru.sentyurin.controller.dto.DirectorOutgoingDto;
+import ru.sentyurin.controller.mapper.DirectorDtoMapper;
 import ru.sentyurin.model.Director;
+import ru.sentyurin.repository.DirectorRepositoryHiber;
 import ru.sentyurin.repository.Repository;
-import ru.sentyurin.repository.RepositoryFactoryHiber;
 import ru.sentyurin.service.DirectorService;
-import ru.sentyurin.servlet.dto.DirectorIncomingDto;
-import ru.sentyurin.servlet.dto.DirectorOutgoingDto;
-import ru.sentyurin.servlet.mapper.DirectorDtoMapper;
-import ru.sentyurin.servlet.mapper.DirectorDtoMapperImpl;
 import ru.sentyurin.util.exception.IncompleateInputExeption;
 
+@Service
 public class DirectorServiceImpl implements DirectorService {
 
-	private Repository<Director, Integer> directorRepository;
+	private final Repository<Director, Integer> directorRepository;
 	private final DirectorDtoMapper dtoMapper;
 
-	public DirectorServiceImpl() {
-		directorRepository = RepositoryFactoryHiber.getRepository(Director.class, Integer.class);
-		dtoMapper = new DirectorDtoMapperImpl();
+	@Autowired
+	public DirectorServiceImpl(DirectorRepositoryHiber directorRepositoryHiber,
+			DirectorDtoMapper directorDtoMapper) {
+		directorRepository = directorRepositoryHiber;
+		dtoMapper = directorDtoMapper;
 	}
 
 	/**
@@ -28,15 +33,6 @@ public class DirectorServiceImpl implements DirectorService {
 	 */
 	public Repository<Director, Integer> getDirectorRepository() {
 		return directorRepository;
-	}
-
-	/**
-	 * Sets a repository of director entities
-	 * 
-	 * @param directorRepository
-	 */
-	public void setDirectorRepository(Repository<Director, Integer> directorRepository) {
-		this.directorRepository = directorRepository;
 	}
 
 	/**
@@ -84,7 +80,8 @@ public class DirectorServiceImpl implements DirectorService {
 		if (director.getId() == null)
 			throw new IncompleateInputExeption("There must be a director ID");
 		directorDataValidation(director);
-		Director updatedDirector = directorRepository.update(mapFromIncomingDto(director)).orElseThrow();
+		Director updatedDirector = directorRepository.update(mapFromIncomingDto(director))
+				.orElseThrow();
 		return mapToOutgoingDto(updatedDirector);
 	}
 

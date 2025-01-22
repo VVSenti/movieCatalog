@@ -1,10 +1,13 @@
-package ru.sentyurin.servlet.mapper;
+package ru.sentyurin.controller.mapper;
 
+import org.springframework.stereotype.Component;
+
+import ru.sentyurin.controller.dto.MovieIncomingDto;
+import ru.sentyurin.controller.dto.MovieOutgoingDto;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.model.Movie;
-import ru.sentyurin.servlet.dto.MovieIncomingDto;
-import ru.sentyurin.servlet.dto.MovieOutgoingDto;
 
+@Component
 public class MovieDtoMapperImpl implements MovieDtoMapper {
 
 	@Override

@@ -3,25 +3,29 @@ package ru.sentyurin.service.impl;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import ru.sentyurin.controller.dto.MovieIncomingDto;
+import ru.sentyurin.controller.dto.MovieOutgoingDto;
+import ru.sentyurin.controller.mapper.MovieDtoMapper;
 import ru.sentyurin.model.Movie;
+import ru.sentyurin.repository.MovieRepositoryHiber;
 import ru.sentyurin.repository.Repository;
-import ru.sentyurin.repository.RepositoryFactoryHiber;
 import ru.sentyurin.service.MovieService;
-import ru.sentyurin.servlet.dto.MovieIncomingDto;
-import ru.sentyurin.servlet.dto.MovieOutgoingDto;
-import ru.sentyurin.servlet.mapper.MovieDtoMapper;
-import ru.sentyurin.servlet.mapper.MovieDtoMapperImpl;
 import ru.sentyurin.util.exception.IncompleateInputExeption;
 import ru.sentyurin.util.exception.IncorrectInputException;
 
+@Service
 public class MovieServiceImpl implements MovieService {
 
-	private Repository<Movie, Integer> movieRepository;
+	private final Repository<Movie, Integer> movieRepository;
 	private final MovieDtoMapper dtoMapper;
-
-	public MovieServiceImpl() {
-		movieRepository = RepositoryFactoryHiber.getRepository(Movie.class, Integer.class);
-		dtoMapper = new MovieDtoMapperImpl();
+	
+	@Autowired
+	public MovieServiceImpl(MovieRepositoryHiber movieRepositoryHiber, MovieDtoMapper movieDtoMapper) {
+		movieRepository = movieRepositoryHiber;
+		dtoMapper = movieDtoMapper;
 	}
 
 	/**
@@ -29,15 +33,6 @@ public class MovieServiceImpl implements MovieService {
 	 */
 	public Repository<Movie, Integer> getMovieRepository() {
 		return movieRepository;
-	}
-
-	/**
-	 * Sets a repository of movie entities
-	 * 
-	 * @param movieRepository
-	 */
-	public void setMovieRepository(Repository<Movie, Integer> movieRepository) {
-		this.movieRepository = movieRepository;
 	}
 
 	/**

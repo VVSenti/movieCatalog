@@ -1,8 +1,8 @@
-package ru.sentyurin.servlet.mapper;
+package ru.sentyurin.controller.mapper;
 
+import ru.sentyurin.controller.dto.DirectorIncomingDto;
+import ru.sentyurin.controller.dto.DirectorOutgoingDto;
 import ru.sentyurin.model.Director;
-import ru.sentyurin.servlet.dto.DirectorIncomingDto;
-import ru.sentyurin.servlet.dto.DirectorOutgoingDto;
 
 public interface DirectorDtoMapper {
 

@@ -4,12 +4,14 @@ import java.util.List;
 import java.util.Optional;
 
 import org.hibernate.Session;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ru.sentyurin.db.ConnectionManagerHiber;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.util.exception.DataBaseException;
 import ru.sentyurin.util.exception.NoDataInRepositoryException;
 
+@org.springframework.stereotype.Repository
 public class DirectorRepositoryHiber implements Repository<Director, Integer> {
 
 	private static final String GET_ALL_HQL = "from Director d left join fetch d.movies";
@@ -20,22 +22,18 @@ public class DirectorRepositoryHiber implements Repository<Director, Integer> {
 
 	private static final String DELETE_MOVIES_BY_DIRECTOR_ID_SQL = "delete from Movie where director_id=?";
 
-	private ConnectionManagerHiber connectionManager;
+	private final ConnectionManagerHiber connectionManager;
+	
+	@Autowired
+	public DirectorRepositoryHiber(ConnectionManagerHiber connectionManager) {
+		this.connectionManager = connectionManager;
+	}
 
 	/**
 	 * Returns {@code ConnectionManager}
 	 */
 	public ConnectionManagerHiber getConnectionManager() {
 		return connectionManager;
-	}
-
-	/**
-	 * Sets {@code ConnectionManager}
-	 * 
-	 * @param connectionManager
-	 */
-	public void setConnectionManager(ConnectionManagerHiber connectionManager) {
-		this.connectionManager = connectionManager;
 	}
 
 	/**

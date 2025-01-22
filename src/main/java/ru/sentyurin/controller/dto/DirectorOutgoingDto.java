@@ -1,4 +1,4 @@
-package ru.sentyurin.servlet.dto;
+package ru.sentyurin.controller.dto;
 
 import java.util.List;
 

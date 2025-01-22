@@ -3,8 +3,8 @@ package ru.sentyurin.service;
 import java.util.List;
 import java.util.Optional;
 
-import ru.sentyurin.servlet.dto.MovieIncomingDto;
-import ru.sentyurin.servlet.dto.MovieOutgoingDto;
+import ru.sentyurin.controller.dto.MovieIncomingDto;
+import ru.sentyurin.controller.dto.MovieOutgoingDto;
 
 public interface MovieService {
 

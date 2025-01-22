@@ -11,12 +11,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import ru.sentyurin.controller.dto.DirectorIncomingDto;
+import ru.sentyurin.controller.dto.DirectorOutgoingDto;
+import ru.sentyurin.controller.mapper.DirectorDtoMapperImpl;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.repository.DirectorRepositoryHiber;
 import ru.sentyurin.service.impl.DirectorServiceImpl;
-import ru.sentyurin.servlet.dto.DirectorIncomingDto;
-import ru.sentyurin.servlet.dto.DirectorOutgoingDto;
-import ru.sentyurin.servlet.mapper.DirectorDtoMapperImpl;
 import ru.sentyurin.util.exception.IncompleateInputExeption;
 
 class DirectorServiceImplTest {
