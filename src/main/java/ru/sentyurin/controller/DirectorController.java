@@ -59,9 +59,10 @@ public class DirectorController {
 	}
 
 	@DeleteMapping("/{id}")
-	public String doDelete(@PathVariable Integer id) {
+	public ResponseEntity<String> doDelete(@PathVariable Integer id) {
 		if (directorService.deleteDirector(id)) {
-			return String.format("Director with id %d has been deleted", id);
+			return new ResponseEntity<>(String.format("Director with id %d has been deleted", id),
+					HttpStatus.OK);
 		} else {
 			throw new NoDataInRepositoryException(NO_DIRECTOR_WITH_ID_MSG);
 		}
@@ -91,7 +92,8 @@ public class DirectorController {
 	}
 
 	@ExceptionHandler
-	private ResponseEntity<String> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException exception){
+	private ResponseEntity<String> handleMethodArgumentTypeMismatchException(
+			MethodArgumentTypeMismatchException exception) {
 		return new ResponseEntity<>("Bad request", HttpStatus.BAD_REQUEST);
 	}
 }

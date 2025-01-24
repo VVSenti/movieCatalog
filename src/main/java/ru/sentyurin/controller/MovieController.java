@@ -62,9 +62,9 @@ public class MovieController {
 	}
 
 	@DeleteMapping("/{id}")
-	public String doDelete(@PathVariable Integer id) {
+	public ResponseEntity<String> doDelete(@PathVariable Integer id) {
 		if (movieService.deleteMovie(id)) {
-			return String.format(MOVIE_DELETED_TEMPLATE, id);
+			return new ResponseEntity<>(String.format(MOVIE_DELETED_TEMPLATE, id), HttpStatus.OK);
 		} else {
 			throw new NoDataInRepositoryException(NOT_FOUND_BY_ID_MSG);
 		}
