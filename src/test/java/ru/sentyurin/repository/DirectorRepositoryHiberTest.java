@@ -14,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
 
+import ru.sentyurin.dao.DirectorDao;
 import ru.sentyurin.db.ConnectionManagerHiber;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.util.exception.NoDataInRepositoryException;
@@ -22,7 +23,7 @@ class DirectorRepositoryHiberTest {
 
 	static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
 
-	private DirectorRepositoryHiber directorRepository;
+	private DirectorDao directorRepository;
 	private ConnectionManagerHiber connectionManager;
 
 	@BeforeAll
@@ -37,7 +38,7 @@ class DirectorRepositoryHiberTest {
 
 	@BeforeEach
 	void init() {
-		directorRepository = (DirectorRepositoryHiber) RepositoryFactoryHiber.getRepository(Director.class,
+		directorRepository = (DirectorDao) RepositoryFactoryHiber.getRepository(Director.class,
 				Integer.class);
 		connectionManager = new ConnectionToTestDbManagerHiber(postgres);
 		RepositoryFactoryHiber.setConnectionManager(connectionManager);

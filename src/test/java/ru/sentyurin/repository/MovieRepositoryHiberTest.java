@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
 
+import ru.sentyurin.dao.MovieDao;
 import ru.sentyurin.db.ConnectionManagerHiber;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.model.Movie;
@@ -25,7 +26,7 @@ class MovieRepositoryHiberTest {
 
 	static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
 
-	private MovieRepositoryHiber movieRepository;
+	private MovieDao movieRepository;
 	private ConnectionManagerHiber connectionManager;
 
 	@BeforeAll
@@ -40,7 +41,7 @@ class MovieRepositoryHiberTest {
 
 	@BeforeEach
 	void init() {
-		movieRepository = (MovieRepositoryHiber) RepositoryFactoryHiber.getRepository(Movie.class,
+		movieRepository = (MovieDao) RepositoryFactoryHiber.getRepository(Movie.class,
 				Integer.class);
 		connectionManager = new ConnectionToTestDbManagerHiber(postgres);
 		RepositoryFactoryHiber.setConnectionManager(connectionManager);

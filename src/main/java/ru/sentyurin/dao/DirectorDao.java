@@ -1,18 +1,16 @@
-package ru.sentyurin.repository;
+package ru.sentyurin.dao;
 
 import java.util.List;
 import java.util.Optional;
 
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.persistence.EntityManager;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.util.exception.NoDataInRepositoryException;
 
 @org.springframework.stereotype.Repository
-public class DirectorRepositoryHiber implements Repository<Director, Integer> {
+public class DirectorDao implements Dao<Director, Integer> {
 
 	private static final String GET_ALL_HQL = "from Director d left join fetch d.movies";
 
@@ -20,13 +18,15 @@ public class DirectorRepositoryHiber implements Repository<Director, Integer> {
 
 	private static final String GET_BY_NAME_HQL = "from Director d where d.name = :name";
 
-	private static final String DELETE_MOVIES_BY_DIRECTOR_ID_SQL = "delete from Movie where director_id=?";
+	private static final String DELETE_MOVIES_BY_DIRECTOR_ID_HQL = "delete from Movie where director_id = :id";
 
-	private final SessionFactory sessionFactory;
+	private static final String DELETE_DIRECTOR_BY_ID_HQL = "delete from Director where id = :id";
+
+	private final EntityManager entityManager;
 
 	@Autowired
-	public DirectorRepositoryHiber(SessionFactory sessionFactory) {
-		this.sessionFactory = sessionFactory;	
+	public DirectorDao(EntityManager entityManager) {
+		this.entityManager = entityManager;
 	}
 
 	/**
@@ -41,8 +41,7 @@ public class DirectorRepositoryHiber implements Repository<Director, Integer> {
 		if (directorInDB.isPresent()) {
 			return directorInDB.get();
 		}
-		Session session = sessionFactory.getCurrentSession();
-		session.persist(director);
+		entityManager.persist(director);
 		return director;
 	}
 
@@ -51,7 +50,7 @@ public class DirectorRepositoryHiber implements Repository<Director, Integer> {
 	 */
 	@Override
 	public List<Director> findAll() {
-		return sessionFactory.getCurrentSession().createQuery(GET_ALL_HQL, Director.class).list();
+		return entityManager.createQuery(GET_ALL_HQL, Director.class).getResultList();
 	}
 
 	/**
@@ -59,8 +58,13 @@ public class DirectorRepositoryHiber implements Repository<Director, Integer> {
 	 */
 	@Override
 	public Optional<Director> findById(Integer id) {
-		return sessionFactory.getCurrentSession().createQuery(GET_BY_ID_HQL, Director.class)
-				.setParameter("id", id).uniqueResultOptional();
+		List<Director> directors = entityManager.createQuery(GET_BY_ID_HQL, Director.class)
+				.setParameter("id", id).getResultList();
+		if (directors.isEmpty()) {
+			return Optional.empty();
+		} else {
+			return Optional.of(directors.getFirst());
+		}
 	}
 
 	/**
@@ -72,12 +76,10 @@ public class DirectorRepositoryHiber implements Repository<Director, Integer> {
 	 */
 	@Override
 	public boolean deleteById(Integer id) {
-		Session session = sessionFactory.getCurrentSession();
-		Director director = session.get(Director.class, id);
-		if (director != null) {
-			session.remove(director);
-		}
-		return director != null;
+		entityManager.createNativeQuery(DELETE_MOVIES_BY_DIRECTOR_ID_HQL).setParameter("id", id)
+				.executeUpdate();
+		return entityManager.createQuery(DELETE_DIRECTOR_BY_ID_HQL).setParameter("id", id)
+				.executeUpdate() > 0;
 	}
 
 	/**
@@ -90,13 +92,11 @@ public class DirectorRepositoryHiber implements Repository<Director, Integer> {
 	 */
 	@Override
 	public Optional<Director> update(Director director) {
-		Session session = sessionFactory.getCurrentSession();
-		Director directorToUpdate = session.get(Director.class, director.getId());
+		Director directorToUpdate = entityManager.find(Director.class, director.getId());
 		if (directorToUpdate == null) {
-			session.getTransaction().rollback();
 			throw new NoDataInRepositoryException("There is no director with this id");
 		}
-		session.merge(director);
+		entityManager.merge(director);
 		return Optional.of(director);
 	}
 
@@ -108,12 +108,16 @@ public class DirectorRepositoryHiber implements Repository<Director, Integer> {
 	 */
 	@Override
 	public boolean isPresentWithId(Integer id) {
-		return sessionFactory.getCurrentSession().get(Director.class, id) != null;
+		return entityManager.find(Director.class, id) != null;
 	}
 
 	private Optional<Director> findByName(String name) {
-		Session session = sessionFactory.getCurrentSession();
-		return session.createQuery(GET_BY_NAME_HQL, Director.class).setParameter("name", name)
-				.uniqueResultOptional();
+		List<Director> directors = entityManager.createQuery(GET_BY_NAME_HQL, Director.class)
+				.setParameter("name", name).getResultList();
+		if (directors.isEmpty()) {
+			return Optional.empty();
+		} else {
+			return Optional.of(directors.getFirst());
+		}
 	}
 }

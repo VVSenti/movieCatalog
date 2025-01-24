@@ -1,4 +1,4 @@
-package ru.sentyurin.servlet;
+package ru.sentyurin.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -33,31 +33,19 @@ import ru.sentyurin.service.DirectorService;
 import ru.sentyurin.util.exception.IncompleateInputExeption;
 import ru.sentyurin.util.exception.NoDataInRepositoryException;
 
-class DirectorServletTest {
+class DirectorControllerTest {
 	private DirectorService service;
-	private DirectorController servlet;
+	private DirectorController controller;
 	private StringWriter responseStringWriter;
 	private PrintWriter responsePrintWriter;
-	private ObjectMapper objectMapper = new ObjectMapper();
 	private HttpServletResponse response;
 	private AtomicInteger responseStatus;
 	private HttpServletRequest request;
 
 	@BeforeEach
 	void init() throws IOException {
-//		servlet = new DirectorServlet();
-		servlet = null;
 		service = Mockito.mock(DirectorService.class);
-		
-		Field serviceField;
-		try {
-			serviceField = DirectorController.class.getDeclaredField("directorService");
-			serviceField.setAccessible(true);
-			serviceField.set(servlet, service);
-			serviceField.setAccessible(false);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		controller = new DirectorController(service);
 
 		response = Mockito.mock(HttpServletResponse.class);
 		responseStringWriter = new StringWriter();
@@ -75,30 +63,22 @@ class DirectorServletTest {
 	}
 
 	@Test
-	void shouldReturnAllDirectors() throws ServletException, IOException {
+	void shouldReturnAllDirectors() {
 		List<DirectorOutgoingDto> directorsOutgoingDtos = List.of(new DirectorOutgoingDto(),
 				new DirectorOutgoingDto());
 		Mockito.when(service.getDirectors()).thenReturn(directorsOutgoingDtos);
-
-		Mockito.when(request.getParameter("id")).thenReturn(null);
-		servlet.doGet(request, response);
-		List<DirectorOutgoingDto> directorsDtos = objectMapper.readValue(
-				responseStringWriter.toString(), new TypeReference<List<DirectorOutgoingDto>>() {
-				});
+		List<DirectorOutgoingDto> directorsDtos = controller.doGet();
 		assertEquals(directorsOutgoingDtos.size(), directorsDtos.size());
 	}
 
 	@Test
-	void shouldReturnDirectorById() throws ServletException, IOException {
+	void shouldReturnDirectorById() {
 		Integer directorIdToGet = 2;
-		Mockito.when(request.getParameter("id")).thenReturn(directorIdToGet.toString());
-
 		Mockito.when(service.getDirectorById(directorIdToGet))
 				.thenReturn(Optional.of(new DirectorOutgoingDto()));
 
-		servlet.doGet(request, response);
-		DirectorOutgoingDto directorDto = objectMapper.readValue(responseStringWriter.toString(),
-				DirectorOutgoingDto.class);
+		controller.doGetById(directorIdToGet);
+		DirectorOutgoingDto directorDto = controller.doGetById(directorIdToGet);
 		assertNotNull(directorDto);
 	}
 
@@ -106,7 +86,7 @@ class DirectorServletTest {
 	void shouldReturnCorrectStatusWhenGetWithIncorrrectIdFormat()
 			throws ServletException, IOException {
 		Mockito.when(request.getParameter("id")).thenReturn("4.5");
-		servlet.doGet(request, response);
+		controller.doGet(request, response);
 		assertEquals(400, responseStatus.get());
 	}
 
@@ -115,7 +95,7 @@ class DirectorServletTest {
 		Integer directorIdToGet = 4;
 		Mockito.when(request.getParameter("id")).thenReturn(directorIdToGet.toString());
 		Mockito.when(service.getDirectorById(directorIdToGet)).thenReturn(Optional.empty());
-		servlet.doGet(request, response);
+		controller.doGet(request, response);
 		assertEquals(404, responseStatus.get());
 	}
 
@@ -123,7 +103,7 @@ class DirectorServletTest {
 	void shouldReturnCorrectStatusWhenDeleteWithIncorrrectIdFormat()
 			throws ServletException, IOException {
 		Mockito.when(request.getParameter("id")).thenReturn("4.5");
-		servlet.doDelete(request, response);
+		controller.doDelete(request, response);
 		assertEquals(400, responseStatus.get());
 	}
 
@@ -133,7 +113,7 @@ class DirectorServletTest {
 		Integer directorIdToDelete = 2;
 		Mockito.when(request.getParameter("id")).thenReturn(directorIdToDelete.toString());
 		Mockito.when(service.deleteDirector(directorIdToDelete)).thenReturn(false);
-		servlet.doDelete(request, response);
+		controller.doDelete(request, response);
 		assertEquals(404, responseStatus.get());
 	}
 
@@ -142,7 +122,7 @@ class DirectorServletTest {
 		Integer directorIdToDelete = 2;
 		Mockito.when(request.getParameter("id")).thenReturn(directorIdToDelete.toString());
 		Mockito.when(service.deleteDirector(directorIdToDelete)).thenReturn(true);
-		servlet.doDelete(request, response);
+		controller.doDelete(request, response);
 		assertEquals(200, responseStatus.get());
 	}
 
@@ -150,7 +130,7 @@ class DirectorServletTest {
 	void shouldReturnCorrectStatusWhenDeleteWithoutIdPathVariable()
 			throws ServletException, IOException {
 		Mockito.when(request.getParameter("id")).thenReturn(null);
-		servlet.doDelete(request, response);
+		controller.doDelete(request, response);
 		assertEquals(400, responseStatus.get());
 	}
 
@@ -161,7 +141,7 @@ class DirectorServletTest {
 				.thenReturn(new DirectorOutgoingDto());
 
 		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader(json)));
-		servlet.doPost(request, response);
+		controller.doPost(request, response);
 		assertEquals(201, responseStatus.get());
 	}
 
@@ -169,7 +149,7 @@ class DirectorServletTest {
 	void shouldReturnCorrectStatusWhenPostWithInvalidJsonRequestBody()
 			throws IOException, ServletException {
 		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader("asd")));
-		servlet.doPost(request, response);
+		controller.doPost(request, response);
 		assertEquals(400, responseStatus.get());
 	}
 
@@ -181,7 +161,7 @@ class DirectorServletTest {
 				.thenThrow(new IncompleateInputExeption(""));
 
 		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader(json)));
-		servlet.doPost(request, response);
+		controller.doPost(request, response);
 		assertEquals(400, responseStatus.get());
 	}
 
@@ -194,7 +174,7 @@ class DirectorServletTest {
 		Mockito.when(request.getParameter("id")).thenReturn(directorIdToUpdate.toString());
 		Mockito.when(service.updateDirector(Mockito.any(DirectorIncomingDto.class)))
 				.thenReturn(new DirectorOutgoingDto());
-		servlet.doPut(request, response);
+		controller.doPut(request, response);
 		DirectorOutgoingDto directorDto = objectMapper.readValue(responseStringWriter.toString(),
 				DirectorOutgoingDto.class);
 		assertNotNull(directorDto);
@@ -208,7 +188,7 @@ class DirectorServletTest {
 				.thenThrow(new IncompleateInputExeption(""));
 
 		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader(json)));
-		servlet.doPut(request, response);
+		controller.doPut(request, response);
 		assertEquals(400, responseStatus.get());
 	}
 
@@ -216,7 +196,7 @@ class DirectorServletTest {
 	void shouldReturnCorrectStatusWhenUpdateWithInvalidJsonRequestBody()
 			throws IOException, ServletException {
 		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader("asd")));
-		servlet.doPut(request, response);
+		controller.doPut(request, response);
 		assertEquals(400, responseStatus.get());
 	}
 
@@ -227,7 +207,7 @@ class DirectorServletTest {
 				.thenThrow(new NoDataInRepositoryException(""));
 
 		Mockito.when(request.getReader()).thenReturn(new BufferedReader(new StringReader(json)));
-		servlet.doPut(request, response);
+		controller.doPut(request, response);
 		assertEquals(404, responseStatus.get());
 	}
 

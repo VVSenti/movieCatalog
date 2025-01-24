@@ -1,4 +1,4 @@
-package ru.sentyurin.servlet;
+package ru.sentyurin.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -35,7 +35,7 @@ import ru.sentyurin.util.exception.InconsistentInputException;
 import ru.sentyurin.util.exception.IncorrectInputException;
 import ru.sentyurin.util.exception.NoDataInRepositoryException;
 
-class MovieServletTest {
+class MovieControllerTest {
 
 	private MovieService service;
 	private MovieController controller;

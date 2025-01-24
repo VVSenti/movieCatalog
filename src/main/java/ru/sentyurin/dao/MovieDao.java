@@ -1,22 +1,20 @@
-package ru.sentyurin.repository;
+package ru.sentyurin.dao;
 
 import java.util.List;
 import java.util.Optional;
 
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.persistence.EntityManager;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.model.Movie;
-import ru.sentyurin.util.exception.DataBaseException;
 import ru.sentyurin.util.exception.InconsistentInputException;
 import ru.sentyurin.util.exception.IncorrectInputException;
 import ru.sentyurin.util.exception.NoDataInRepositoryException;
 
 @org.springframework.stereotype.Repository
-public class MovieRepositoryHiber implements Repository<Movie, Integer> {
+public class MovieDao implements Dao<Movie, Integer> {
 
 	private static final String GET_ALL_MOVIES_HQL = "from Movie m left join fetch m.director order by m.id";
 
@@ -30,22 +28,23 @@ public class MovieRepositoryHiber implements Repository<Movie, Integer> {
 			from Movie m left join fetch m.director
 			where m.title = :title""";
 
-	private static final String DELETE_BY_DIRECTOR_ID_HQL = "delete from Movie where director_id = :id";
+	private static final String DELETE_BY_DIRECTOR_ID_SQL = "delete from Movie where director_id = :id";
 
-	private final SessionFactory sessionFactory;
-	private final Repository<Director, Integer> directorRepository;
+	private static final String DELETE_BY_ID_HQL = "delete from Movie where id = :id";
+
+	private final EntityManager entityManager;
+	private final Dao<Director, Integer> directorRepository;
 
 	@Autowired
-	public MovieRepositoryHiber(SessionFactory sessionFactory,
-			Repository<Director, Integer> directorRepository) {
-		this.sessionFactory = sessionFactory;
+	public MovieDao(EntityManager entityManager, Dao<Director, Integer> directorRepository) {
+		this.entityManager = entityManager;
 		this.directorRepository = directorRepository;
 	}
 
 	/**
 	 * Returns a repository of director entities
 	 */
-	public Repository<Director, Integer> getDirectorRepository() {
+	public Dao<Director, Integer> getDirectorRepository() {
 		return directorRepository;
 	}
 
@@ -68,9 +67,9 @@ public class MovieRepositoryHiber implements Repository<Movie, Integer> {
 	 */
 	@Override
 	public Movie save(Movie movie) throws InconsistentInputException, IncorrectInputException {
-		Optional<Movie> movieInDB = findByTitle(movie.getTitle());
-		if (movieInDB.isPresent()) {
-			return movieInDB.get();
+		List<Movie> movieInDB = findByTitle(movie.getTitle());
+		if (!movieInDB.isEmpty()) {
+			return movieInDB.getFirst();
 		}
 
 		Director director = movie.getDirector();
@@ -85,9 +84,8 @@ public class MovieRepositoryHiber implements Repository<Movie, Integer> {
 					() -> new NoDataInRepositoryException("There is no director with this ID"));
 		}
 
-		Session session = sessionFactory.getCurrentSession();
 		movie.setDirector(directorInDB);
-		session.persist(movie);
+		entityManager.persist(movie);
 		return movie;
 	}
 
@@ -97,8 +95,7 @@ public class MovieRepositoryHiber implements Repository<Movie, Integer> {
 	@Override
 	@Transactional
 	public List<Movie> findAll() {
-		Session session = sessionFactory.getCurrentSession();
-		return session.createQuery(GET_ALL_MOVIES_HQL, Movie.class).list();
+		return entityManager.createQuery(GET_ALL_MOVIES_HQL, Movie.class).getResultList();
 	}
 
 	/**
@@ -106,8 +103,13 @@ public class MovieRepositoryHiber implements Repository<Movie, Integer> {
 	 */
 	@Override
 	public Optional<Movie> findById(Integer id) {
-		return sessionFactory.getCurrentSession().createQuery(GET_MOVIE_BY_ID_HQL, Movie.class)
-				.setParameter("id", id).uniqueResultOptional();
+		List<Movie> movies = entityManager.createQuery(GET_MOVIE_BY_ID_HQL, Movie.class)
+				.setParameter("id", id).getResultList();
+		if (movies.isEmpty()) {
+			return Optional.empty();
+		} else {
+			return Optional.of(movies.getFirst());
+		}
 	}
 
 	/**
@@ -119,12 +121,8 @@ public class MovieRepositoryHiber implements Repository<Movie, Integer> {
 	 */
 	@Override
 	public boolean deleteById(Integer id) {
-		Session session = sessionFactory.getCurrentSession();
-		Movie movieToDelete = session.get(Movie.class, id);
-		if (movieToDelete != null) {
-			session.remove(movieToDelete);
-		}
-		return movieToDelete != null;
+		return entityManager.createQuery(DELETE_BY_ID_HQL).setParameter("id", id)
+				.executeUpdate() > 0;
 	}
 
 	/**
@@ -135,11 +133,8 @@ public class MovieRepositoryHiber implements Repository<Movie, Integer> {
 	 *         another case
 	 */
 	public boolean deleteByDirectorId(Integer id) {
-		Session session = sessionFactory.getCurrentSession();
-		@SuppressWarnings("deprecation")
-		int res = session.createNativeQuery(DELETE_BY_DIRECTOR_ID_HQL).setParameter("id", id)
-				.executeUpdate();
-		return res > 0;
+		return entityManager.createNativeQuery(DELETE_BY_DIRECTOR_ID_SQL).setParameter("id", id)
+				.executeUpdate() > 0;
 	}
 
 	/**
@@ -168,9 +163,7 @@ public class MovieRepositoryHiber implements Repository<Movie, Integer> {
 	@Override
 	public Optional<Movie> update(Movie movie)
 			throws NoDataInRepositoryException, InconsistentInputException {
-		Session session = sessionFactory.getCurrentSession();
-
-		if (session.get(Movie.class, movie.getId()) == null) {
+		if (entityManager.find(Movie.class, movie.getId()) == null) {
 			throw new NoDataInRepositoryException("There is no movie with this id");
 		}
 		Director director = movie.getDirector();
@@ -194,7 +187,7 @@ public class MovieRepositoryHiber implements Repository<Movie, Integer> {
 			movie.setDirector(director);
 		}
 
-		session.merge(movie);
+		entityManager.merge(movie);
 		return Optional.of(movie);
 	}
 
@@ -206,23 +199,19 @@ public class MovieRepositoryHiber implements Repository<Movie, Integer> {
 	 */
 	@Override
 	public boolean isPresentWithId(Integer id) {
-		Session session = sessionFactory.getCurrentSession();
-		Movie movie = session.get(Movie.class, id);
-		return movie != null;
+		return entityManager.find(Movie.class, id) != null;
 	}
 
 	/**
 	 * Returns all movie entities with specified director ID from DB.
 	 */
 	public List<Movie> findByDirectorId(Integer id) {
-		Session session = sessionFactory.getCurrentSession();
-		return session.createQuery(GET_ALL_MOVIES_BY_DIRECTOR_ID_HQL, Movie.class)
-				.setParameter("id", id).list();
+		return entityManager.createQuery(GET_ALL_MOVIES_BY_DIRECTOR_ID_HQL, Movie.class)
+				.setParameter("id", id).getResultList();
 	}
 
-	private Optional<Movie> findByTitle(String title) {
-		Session session = sessionFactory.getCurrentSession();
-		return session.createQuery(GET_MOVIE_BY_TITLE_HQL, Movie.class).setParameter("title", title)
-				.uniqueResultOptional();
+	private List<Movie> findByTitle(String title) {
+		return entityManager.createQuery(GET_MOVIE_BY_TITLE_HQL, Movie.class)
+				.setParameter("title", title).getResultList();
 	}
 }

@@ -1,9 +1,9 @@
-package ru.sentyurin.repository;
+package ru.sentyurin.dao;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface Repository<T, K> {
+public interface Dao<T, K> {
 
 	T save(T t);
 

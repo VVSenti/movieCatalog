@@ -10,9 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.sentyurin.controller.dto.MovieIncomingDto;
 import ru.sentyurin.controller.dto.MovieOutgoingDto;
 import ru.sentyurin.controller.mapper.MovieDtoMapper;
+import ru.sentyurin.dao.MovieDao;
+import ru.sentyurin.dao.Dao;
 import ru.sentyurin.model.Movie;
-import ru.sentyurin.repository.MovieRepositoryHiber;
-import ru.sentyurin.repository.Repository;
 import ru.sentyurin.service.MovieService;
 import ru.sentyurin.util.exception.IncompleateInputExeption;
 import ru.sentyurin.util.exception.IncorrectInputException;
@@ -20,11 +20,11 @@ import ru.sentyurin.util.exception.IncorrectInputException;
 @Service
 public class MovieServiceImpl implements MovieService {
 
-	private final Repository<Movie, Integer> movieRepository;
+	private final Dao<Movie, Integer> movieRepository;
 	private final MovieDtoMapper dtoMapper;
 	
 	@Autowired
-	public MovieServiceImpl(Repository<Movie, Integer> movieRepositoryHiber, MovieDtoMapper movieDtoMapper) {
+	public MovieServiceImpl(Dao<Movie, Integer> movieRepositoryHiber, MovieDtoMapper movieDtoMapper) {
 		movieRepository = movieRepositoryHiber;
 		dtoMapper = movieDtoMapper;
 	}
@@ -32,7 +32,7 @@ public class MovieServiceImpl implements MovieService {
 	/**
 	 * Gets a repository of movie entities
 	 */
-	public Repository<Movie, Integer> getMovieRepository() {
+	public Dao<Movie, Integer> getMovieRepository() {
 		return movieRepository;
 	}
 

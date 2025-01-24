@@ -13,27 +13,26 @@ import org.mockito.Mockito;
 
 import ru.sentyurin.controller.dto.DirectorIncomingDto;
 import ru.sentyurin.controller.dto.DirectorOutgoingDto;
+import ru.sentyurin.controller.mapper.DirectorDtoMapper;
 import ru.sentyurin.controller.mapper.DirectorDtoMapperImpl;
+import ru.sentyurin.dao.DirectorDao;
 import ru.sentyurin.model.Director;
-import ru.sentyurin.repository.DirectorRepositoryHiber;
 import ru.sentyurin.service.impl.DirectorServiceImpl;
 import ru.sentyurin.util.exception.IncompleateInputExeption;
 
 class DirectorServiceImplTest {
-
+	
+	private DirectorDao directorRepository;
+	private DirectorDtoMapper dtoMapper;
 	private DirectorServiceImpl directorService;
-	private DirectorRepositoryHiber directorRepository;
 	private DirectorDtoMapperImpl mapper;
 
 	@BeforeEach
 	void init() {
-		directorRepository = Mockito.mock(DirectorRepositoryHiber.class);
-
-		directorService = new DirectorServiceImpl();
-		directorService.setDirectorRepository(directorRepository);
-
+		directorRepository = Mockito.mock(DirectorDao.class);
+		dtoMapper = new DirectorDtoMapperImpl();
+		directorService = new DirectorServiceImpl(directorRepository, dtoMapper);
 		mapper = new DirectorDtoMapperImpl();
-
 	}
 
 	@Test

@@ -1,6 +1,5 @@
 package ru.sentyurin.model;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -18,7 +17,7 @@ public class Movie {
 	private String title;
 	private Integer releaseYear;
 	
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "director_id")
 	private Director director;
 

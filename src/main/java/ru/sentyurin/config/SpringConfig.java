@@ -14,8 +14,9 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.springframework.orm.hibernate5.HibernateTransactionManager;
-import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
+import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
@@ -28,7 +29,7 @@ import ru.sentyurin.util.exception.FileReadingException;
 @ComponentScan("ru.sentyurin")
 @PropertySource("classpath:db.properties")
 @EnableTransactionManagement
-@EnableJpaRepositories("ru.senttyurin.repository")
+@EnableJpaRepositories("ru.sentyurin.repository")
 public class SpringConfig implements WebMvcConfigurer {
 	private final Environment env;
 
@@ -47,30 +48,49 @@ public class SpringConfig implements WebMvcConfigurer {
 		return dataSource;
 	}
 
-	@Bean
-	public LocalSessionFactoryBean sessionFactory() {
-		Properties properties = new Properties();
+//	@Bean
+//	public LocalSessionFactoryBean sessionFactory() {
+//		LocalSessionFactoryBean sessionFactory = new LocalSessionFactoryBean();
+//		sessionFactory.setDataSource(dataSource());
+//		sessionFactory.setPackagesToScan("ru.sentyurin.model");
+//		sessionFactory.setHibernateProperties(hibernateProperties());
+//		return sessionFactory;
+//	}
 
+//	@Bean
+//	public PlatformTransactionManager hibernateTransactionManager() {
+//		HibernateTransactionManager transactionManager = new HibernateTransactionManager();
+//		transactionManager.setSessionFactory(sessionFactory().getObject());
+//		return transactionManager;
+//	}
+
+	@Bean
+	public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+		LocalContainerEntityManagerFactoryBean emf = new LocalContainerEntityManagerFactoryBean();
+		emf.setDataSource(dataSource());
+		emf.setPackagesToScan("ru.sentyurin.model");
+		emf.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
+		emf.setJpaProperties(hibernateProperties());
+		return emf;
+	}
+	
+	@Bean
+	public PlatformTransactionManager transactionManager() {
+		JpaTransactionManager transactionManager = new JpaTransactionManager();
+		transactionManager.setEntityManagerFactory(entityManagerFactory().getObject());
+		return transactionManager;
+	}
+
+	private Properties hibernateProperties() {
 		try (InputStream input = getClass().getClassLoader()
 				.getResourceAsStream("hibernate.properties")) {
+			Properties properties = new Properties();
 			properties.load(input);
+			return properties;
 		} catch (IOException e) {
 			throw new FileReadingException(
 					"Problem occured during loading a hibernate.properties file");
 		}
-
-		LocalSessionFactoryBean sessionFactory = new LocalSessionFactoryBean();
-		sessionFactory.setDataSource(dataSource());
-		sessionFactory.setPackagesToScan("ru.sentyurin.model");
-		sessionFactory.setHibernateProperties(properties);
-		return sessionFactory;
-	}
-
-	@Bean
-	public PlatformTransactionManager hibernateTransactionManager() {
-		HibernateTransactionManager transactionManager = new HibernateTransactionManager();
-		transactionManager.setSessionFactory(sessionFactory().getObject());
-		return transactionManager;
 	}
 
 }

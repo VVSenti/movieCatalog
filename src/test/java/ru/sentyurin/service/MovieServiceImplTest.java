@@ -13,10 +13,11 @@ import org.mockito.Mockito;
 
 import ru.sentyurin.controller.dto.MovieIncomingDto;
 import ru.sentyurin.controller.dto.MovieOutgoingDto;
+import ru.sentyurin.controller.mapper.MovieDtoMapper;
 import ru.sentyurin.controller.mapper.MovieDtoMapperImpl;
+import ru.sentyurin.dao.MovieDao;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.model.Movie;
-import ru.sentyurin.repository.MovieRepositoryHiber;
 import ru.sentyurin.service.impl.MovieServiceImpl;
 import ru.sentyurin.util.exception.IncompleateInputExeption;
 import ru.sentyurin.util.exception.IncorrectInputException;
@@ -24,14 +25,15 @@ import ru.sentyurin.util.exception.IncorrectInputException;
 class MovieServiceImplTest {
 
 	private MovieServiceImpl movieService;
-	private MovieRepositoryHiber movieRepository;
+	private MovieDao movieRepository;
 	private MovieDtoMapperImpl mapper;
+	private MovieDtoMapper dtoMapper;
 
 	@BeforeEach
 	void init() {
-		movieRepository = Mockito.mock(MovieRepositoryHiber.class);
-		movieService = new MovieServiceImpl();
-		movieService.setMovieRepository(movieRepository);
+		movieRepository = Mockito.mock(MovieDao.class);
+		dtoMapper = new MovieDtoMapperImpl();
+		movieService = new MovieServiceImpl(movieRepository, dtoMapper);
 		mapper = new MovieDtoMapperImpl();
 	}
 

@@ -10,19 +10,19 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.sentyurin.controller.dto.DirectorIncomingDto;
 import ru.sentyurin.controller.dto.DirectorOutgoingDto;
 import ru.sentyurin.controller.mapper.DirectorDtoMapper;
+import ru.sentyurin.dao.Dao;
 import ru.sentyurin.model.Director;
-import ru.sentyurin.repository.Repository;
 import ru.sentyurin.service.DirectorService;
 import ru.sentyurin.util.exception.IncompleateInputExeption;
 
 @Service
 public class DirectorServiceImpl implements DirectorService {
 
-	private final Repository<Director, Integer> directorRepository;
+	private final Dao<Director, Integer> directorRepository;
 	private final DirectorDtoMapper dtoMapper;
 
 	@Autowired
-	public DirectorServiceImpl(Repository<Director, Integer> directorRepositoryHiber,
+	public DirectorServiceImpl(Dao<Director, Integer> directorRepositoryHiber,
 			DirectorDtoMapper directorDtoMapper) {
 		directorRepository = directorRepositoryHiber;
 		dtoMapper = directorDtoMapper;
@@ -31,7 +31,7 @@ public class DirectorServiceImpl implements DirectorService {
 	/**
 	 * Gets a repository of director entities
 	 */
-	public Repository<Director, Integer> getDirectorRepository() {
+	public Dao<Director, Integer> getDirectorRepository() {
 		return directorRepository;
 	}
 
@@ -53,7 +53,7 @@ public class DirectorServiceImpl implements DirectorService {
 	 * Returns all director entities in repository
 	 */
 	@Override
-	@Transactional
+	@Transactional()
 	public List<DirectorOutgoingDto> getDirectors() {
 		return directorRepository.findAll().stream().map(this::mapToOutgoingDto).toList();
 	}
