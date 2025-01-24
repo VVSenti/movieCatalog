@@ -2,20 +2,17 @@ package ru.sentyurin.config;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Properties;
 
 import javax.sql.DataSource;
 
-import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.hibernate5.HibernateTransactionManager;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
@@ -24,38 +21,29 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import ru.sentyurin.util.exception.FileReadingException;
 
 @Configuration
-@ComponentScan("ru.sentyurin")
 @EnableWebMvc
-//@PropertySource("classpath:hibernate.properties")
+@ComponentScan("ru.sentyurin")
 @PropertySource("classpath:db.properties")
 @EnableTransactionManagement
+@EnableJpaRepositories("ru.senttyurin.repository")
 public class SpringConfig implements WebMvcConfigurer {
-	private final ApplicationContext applicationContext;
 	private final Environment env;
 
 	@Autowired
-	public SpringConfig(ApplicationContext applicationContext, Environment env) {
-		this.applicationContext = applicationContext;
+	public SpringConfig(Environment env) {
 		this.env = env;
-	}
-
-	@Bean
-	public ObjectMapper objectMapper() {
-		return new ObjectMapper();
 	}
 
 	@Bean
 	public DataSource dataSource() {
 		DriverManagerDataSource dataSource = new DriverManagerDataSource();
-
 		dataSource.setDriverClassName(env.getRequiredProperty("db.driver_class"));
 		dataSource.setUrl(env.getRequiredProperty("db.url"));
 		dataSource.setUsername(env.getRequiredProperty("db.username"));
 		dataSource.setPassword(env.getRequiredProperty("db.password"));
-
 		return dataSource;
 	}
 
@@ -67,8 +55,8 @@ public class SpringConfig implements WebMvcConfigurer {
 				.getResourceAsStream("hibernate.properties")) {
 			properties.load(input);
 		} catch (IOException e) {
-			throw new RuntimeException(
-					"Problem has occured during loading a hibernate.properties file");
+			throw new FileReadingException(
+					"Problem occured during loading a hibernate.properties file");
 		}
 
 		LocalSessionFactoryBean sessionFactory = new LocalSessionFactoryBean();

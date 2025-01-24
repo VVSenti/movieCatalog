@@ -21,7 +21,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import ru.sentyurin.controller.dto.DirectorIncomingDto;
 import ru.sentyurin.controller.dto.DirectorOutgoingDto;
 import ru.sentyurin.service.DirectorService;
-import ru.sentyurin.service.impl.DirectorServiceImpl;
 import ru.sentyurin.util.exception.DataBaseException;
 import ru.sentyurin.util.exception.IncompleateInputExeption;
 import ru.sentyurin.util.exception.NoDataInRepositoryException;
@@ -34,7 +33,7 @@ public class DirectorController {
 	private final DirectorService directorService;
 
 	@Autowired
-	public DirectorController(DirectorServiceImpl directorServiceImpl) {
+	public DirectorController(DirectorService directorServiceImpl) {
 		directorService = directorServiceImpl;
 	}
 

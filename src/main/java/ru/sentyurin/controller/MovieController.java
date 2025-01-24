@@ -21,7 +21,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import ru.sentyurin.controller.dto.MovieIncomingDto;
 import ru.sentyurin.controller.dto.MovieOutgoingDto;
 import ru.sentyurin.service.MovieService;
-import ru.sentyurin.service.impl.MovieServiceImpl;
 import ru.sentyurin.util.exception.DataBaseException;
 import ru.sentyurin.util.exception.IncompleateInputExeption;
 import ru.sentyurin.util.exception.InconsistentInputException;
@@ -37,7 +36,7 @@ public class MovieController {
 	private final MovieService movieService;
 
 	@Autowired
-	public MovieController(MovieServiceImpl movieService) {
+	public MovieController(MovieService movieService) {
 		this.movieService = movieService;
 	}
 

@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ru.sentyurin.controller.dto.MovieIncomingDto;
 import ru.sentyurin.controller.dto.MovieOutgoingDto;
@@ -49,6 +50,7 @@ public class MovieServiceImpl implements MovieService {
 	 *                                  {@code movie} less than 1895
 	 */
 	@Override
+	@Transactional
 	public MovieOutgoingDto createMovie(MovieIncomingDto movie)
 			throws IncompleateInputExeption, IncorrectInputException {
 		validateMovieData(movie);
@@ -59,6 +61,7 @@ public class MovieServiceImpl implements MovieService {
 	 * Returns all movie entities in repository
 	 */
 	@Override
+	@Transactional
 	public List<MovieOutgoingDto> getMovies() {
 		return movieRepository.findAll().stream().map(this::mapToOutgoingDto).toList();
 	}
@@ -67,6 +70,7 @@ public class MovieServiceImpl implements MovieService {
 	 * Returns movie entity with specified ID
 	 */
 	@Override
+	@Transactional
 	public Optional<MovieOutgoingDto> getMovieById(int id) {
 		Optional<Movie> optionalMovie = movieRepository.findById(id);
 		return optionalMovie.isEmpty() ? Optional.empty()
@@ -90,6 +94,7 @@ public class MovieServiceImpl implements MovieService {
 	 *                                  {@code movie} less than 1895
 	 */
 	@Override
+	@Transactional
 	public MovieOutgoingDto updateMovie(MovieIncomingDto movie)
 			throws IncompleateInputExeption, IncorrectInputException {
 		if (movie.getId() == null)
@@ -102,6 +107,7 @@ public class MovieServiceImpl implements MovieService {
 	 * Deletes movie entity from repository
 	 */
 	@Override
+	@Transactional
 	public boolean deleteMovie(int id) {
 		return movieRepository.deleteById(id);
 	}

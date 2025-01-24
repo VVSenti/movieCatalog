@@ -8,9 +8,7 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
-import ru.sentyurin.db.ConnectionManagerHiber;
 import ru.sentyurin.model.Director;
-import ru.sentyurin.util.exception.DataBaseException;
 import ru.sentyurin.util.exception.NoDataInRepositoryException;
 
 @org.springframework.stereotype.Repository
@@ -28,7 +26,7 @@ public class DirectorRepositoryHiber implements Repository<Director, Integer> {
 
 	@Autowired
 	public DirectorRepositoryHiber(SessionFactory sessionFactory) {
-		this.sessionFactory = sessionFactory;
+		this.sessionFactory = sessionFactory;	
 	}
 
 	/**
@@ -38,7 +36,6 @@ public class DirectorRepositoryHiber implements Repository<Director, Integer> {
 	 * @return saved director entity
 	 */
 	@Override
-	@Transactional
 	public Director save(Director director) {
 		Optional<Director> directorInDB = findByName(director.getName());
 		if (directorInDB.isPresent()) {
@@ -53,21 +50,17 @@ public class DirectorRepositoryHiber implements Repository<Director, Integer> {
 	 * Returns all director entities from DB. Fields {@code movies} will be null.
 	 */
 	@Override
-	@Transactional
 	public List<Director> findAll() {
-		Session session = sessionFactory.getCurrentSession();
-		return session.createQuery(GET_ALL_HQL, Director.class).list();
+		return sessionFactory.getCurrentSession().createQuery(GET_ALL_HQL, Director.class).list();
 	}
 
 	/**
 	 * Returns a director entity with specified ID from DB.
 	 */
 	@Override
-	@Transactional
 	public Optional<Director> findById(Integer id) {
-		Session session = sessionFactory.getCurrentSession();
-		return session.createQuery(GET_BY_ID_HQL, Director.class).setParameter("id", id)
-				.uniqueResultOptional();
+		return sessionFactory.getCurrentSession().createQuery(GET_BY_ID_HQL, Director.class)
+				.setParameter("id", id).uniqueResultOptional();
 	}
 
 	/**
@@ -78,7 +71,6 @@ public class DirectorRepositoryHiber implements Repository<Director, Integer> {
 	 *         another case
 	 */
 	@Override
-	@Transactional
 	public boolean deleteById(Integer id) {
 		Session session = sessionFactory.getCurrentSession();
 		Director director = session.get(Director.class, id);
@@ -97,7 +89,6 @@ public class DirectorRepositoryHiber implements Repository<Director, Integer> {
 	 * @return updated movie entity
 	 */
 	@Override
-	@Transactional
 	public Optional<Director> update(Director director) {
 		Session session = sessionFactory.getCurrentSession();
 		Director directorToUpdate = session.get(Director.class, director.getId());
@@ -116,11 +107,8 @@ public class DirectorRepositoryHiber implements Repository<Director, Integer> {
 	 *         in another case
 	 */
 	@Override
-	@Transactional
 	public boolean isPresentWithId(Integer id) {
-		Session session = sessionFactory.getCurrentSession();
-		Director director = session.get(Director.class, id);
-		return director != null;
+		return sessionFactory.getCurrentSession().get(Director.class, id) != null;
 	}
 
 	private Optional<Director> findByName(String name) {

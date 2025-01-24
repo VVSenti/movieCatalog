@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ru.sentyurin.controller.dto.DirectorIncomingDto;
 import ru.sentyurin.controller.dto.DirectorOutgoingDto;
@@ -41,6 +42,7 @@ public class DirectorServiceImpl implements DirectorService {
 	 *                                  {@code null}
 	 */
 	@Override
+	@Transactional
 	public DirectorOutgoingDto createDirector(DirectorIncomingDto director)
 			throws IncompleateInputExeption {
 		directorDataValidation(director);
@@ -51,6 +53,7 @@ public class DirectorServiceImpl implements DirectorService {
 	 * Returns all director entities in repository
 	 */
 	@Override
+	@Transactional
 	public List<DirectorOutgoingDto> getDirectors() {
 		return directorRepository.findAll().stream().map(this::mapToOutgoingDto).toList();
 	}
@@ -59,6 +62,7 @@ public class DirectorServiceImpl implements DirectorService {
 	 * Returns director entity with specified ID
 	 */
 	@Override
+	@Transactional
 	public Optional<DirectorOutgoingDto> getDirectorById(int id) {
 		Optional<Director> optionalDirector = directorRepository.findById(id);
 		return optionalDirector.isEmpty() ? Optional.empty()
@@ -75,6 +79,7 @@ public class DirectorServiceImpl implements DirectorService {
 	 *                                  {@code director} is {@code null}
 	 */
 	@Override
+	@Transactional
 	public DirectorOutgoingDto updateDirector(DirectorIncomingDto director) {
 		if (director.getId() == null)
 			throw new IncompleateInputExeption("There must be a director ID");
@@ -88,6 +93,7 @@ public class DirectorServiceImpl implements DirectorService {
 	 * Deletes director entity from repository
 	 */
 	@Override
+	@Transactional
 	public boolean deleteDirector(int id) {
 		return directorRepository.deleteById(id);
 	}

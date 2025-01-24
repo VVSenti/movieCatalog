@@ -8,7 +8,6 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
-import ru.sentyurin.db.ConnectionManagerHiber;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.model.Movie;
 import ru.sentyurin.util.exception.DataBaseException;
@@ -68,7 +67,6 @@ public class MovieRepositoryHiber implements Repository<Movie, Integer> {
 	 * @return saved movie entity
 	 */
 	@Override
-	@Transactional
 	public Movie save(Movie movie) throws InconsistentInputException, IncorrectInputException {
 		Optional<Movie> movieInDB = findByTitle(movie.getTitle());
 		if (movieInDB.isPresent()) {
@@ -107,11 +105,9 @@ public class MovieRepositoryHiber implements Repository<Movie, Integer> {
 	 * Returns a movie entity with specified ID from DB.
 	 */
 	@Override
-	@Transactional
 	public Optional<Movie> findById(Integer id) {
-		Session session = sessionFactory.getCurrentSession();
-		return session.createQuery(GET_MOVIE_BY_ID_HQL, Movie.class).setParameter("id", id)
-				.uniqueResultOptional();
+		return sessionFactory.getCurrentSession().createQuery(GET_MOVIE_BY_ID_HQL, Movie.class)
+				.setParameter("id", id).uniqueResultOptional();
 	}
 
 	/**
@@ -122,7 +118,6 @@ public class MovieRepositoryHiber implements Repository<Movie, Integer> {
 	 *         another case
 	 */
 	@Override
-	@Transactional
 	public boolean deleteById(Integer id) {
 		Session session = sessionFactory.getCurrentSession();
 		Movie movieToDelete = session.get(Movie.class, id);
@@ -139,7 +134,6 @@ public class MovieRepositoryHiber implements Repository<Movie, Integer> {
 	 * @return {@code true} if an entity has been deleted and {@code false} in
 	 *         another case
 	 */
-	@Transactional
 	public boolean deleteByDirectorId(Integer id) {
 		Session session = sessionFactory.getCurrentSession();
 		@SuppressWarnings("deprecation")
@@ -172,11 +166,10 @@ public class MovieRepositoryHiber implements Repository<Movie, Integer> {
 	 * @return updated movie entity
 	 */
 	@Override
-	@Transactional
 	public Optional<Movie> update(Movie movie)
 			throws NoDataInRepositoryException, InconsistentInputException {
 		Session session = sessionFactory.getCurrentSession();
-		
+
 		if (session.get(Movie.class, movie.getId()) == null) {
 			throw new NoDataInRepositoryException("There is no movie with this id");
 		}
@@ -200,7 +193,7 @@ public class MovieRepositoryHiber implements Repository<Movie, Integer> {
 			director = directorRepository.save(director);
 			movie.setDirector(director);
 		}
-		
+
 		session.merge(movie);
 		return Optional.of(movie);
 	}
@@ -212,7 +205,6 @@ public class MovieRepositoryHiber implements Repository<Movie, Integer> {
 	 *         in another case
 	 */
 	@Override
-	@Transactional
 	public boolean isPresentWithId(Integer id) {
 		Session session = sessionFactory.getCurrentSession();
 		Movie movie = session.get(Movie.class, id);
@@ -222,7 +214,6 @@ public class MovieRepositoryHiber implements Repository<Movie, Integer> {
 	/**
 	 * Returns all movie entities with specified director ID from DB.
 	 */
-	@Transactional
 	public List<Movie> findByDirectorId(Integer id) {
 		Session session = sessionFactory.getCurrentSession();
 		return session.createQuery(GET_ALL_MOVIES_BY_DIRECTOR_ID_HQL, Movie.class)
