@@ -10,29 +10,26 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.sentyurin.controller.dto.DirectorIncomingDto;
 import ru.sentyurin.controller.dto.DirectorOutgoingDto;
 import ru.sentyurin.controller.mapper.DirectorDtoMapper;
-import ru.sentyurin.dao.Dao;
 import ru.sentyurin.model.Director;
+import ru.sentyurin.repository.DirectorRepository;
+import ru.sentyurin.repository.MovieRepository;
 import ru.sentyurin.service.DirectorService;
 import ru.sentyurin.util.exception.IncompleateInputExeption;
+import ru.sentyurin.util.exception.NoDataInRepositoryException;
 
 @Service
 public class DirectorServiceImpl implements DirectorService {
 
-	private final Dao<Director, Integer> directorRepository;
+	private final DirectorRepository directorRepository;
+	private final MovieRepository movieRepository;
 	private final DirectorDtoMapper dtoMapper;
 
 	@Autowired
-	public DirectorServiceImpl(Dao<Director, Integer> directorRepositoryHiber,
-			DirectorDtoMapper directorDtoMapper) {
-		directorRepository = directorRepositoryHiber;
+	public DirectorServiceImpl(DirectorRepository directorRepository,
+			MovieRepository movieRepository, DirectorDtoMapper directorDtoMapper) {
+		this.directorRepository = directorRepository;
+		this.movieRepository = movieRepository;
 		dtoMapper = directorDtoMapper;
-	}
-
-	/**
-	 * Gets a repository of director entities
-	 */
-	public Dao<Director, Integer> getDirectorRepository() {
-		return directorRepository;
 	}
 
 	/**
@@ -46,6 +43,7 @@ public class DirectorServiceImpl implements DirectorService {
 	public DirectorOutgoingDto createDirector(DirectorIncomingDto director)
 			throws IncompleateInputExeption {
 		directorDataValidation(director);
+		director.setId(null);
 		return dtoMapper.map(directorRepository.save(dtoMapper.map(director)));
 	}
 
@@ -63,7 +61,7 @@ public class DirectorServiceImpl implements DirectorService {
 	 */
 	@Override
 	@Transactional
-	public Optional<DirectorOutgoingDto> getDirectorById(int id) {
+	public Optional<DirectorOutgoingDto> getDirectorById(Integer id) {
 		Optional<Director> optionalDirector = directorRepository.findById(id);
 		return optionalDirector.isEmpty() ? Optional.empty()
 				: Optional.of(mapToOutgoingDto(optionalDirector.get()));
@@ -84,9 +82,10 @@ public class DirectorServiceImpl implements DirectorService {
 		if (director.getId() == null)
 			throw new IncompleateInputExeption("There must be a director ID");
 		directorDataValidation(director);
-		Director updatedDirector = directorRepository.update(mapFromIncomingDto(director))
-				.orElseThrow();
-		return mapToOutgoingDto(updatedDirector);
+		Director directorToUpdate = directorRepository.findById(director.getId()).orElseThrow(
+				() -> new NoDataInRepositoryException("There is no director with such ID"));
+		directorToUpdate.setName(director.getName());
+		return mapToOutgoingDto(directorRepository.save(directorToUpdate));
 	}
 
 	/**
@@ -94,8 +93,9 @@ public class DirectorServiceImpl implements DirectorService {
 	 */
 	@Override
 	@Transactional
-	public boolean deleteDirector(int id) {
-		return directorRepository.deleteById(id);
+	public void deleteDirector(Integer id) {
+		movieRepository.deleteByDirectorId(id);
+		directorRepository.deleteById(id);
 	}
 
 	private void directorDataValidation(DirectorIncomingDto director)
@@ -108,7 +108,4 @@ public class DirectorServiceImpl implements DirectorService {
 		return dtoMapper.map(director);
 	}
 
-	private Director mapFromIncomingDto(DirectorIncomingDto incomingDto) {
-		return dtoMapper.map(incomingDto);
-	}
 }

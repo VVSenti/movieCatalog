@@ -12,10 +12,10 @@ public interface MovieService {
 
 	List<MovieOutgoingDto> getMovies();
 
-	Optional<MovieOutgoingDto> getMovieById(int id);
+	Optional<MovieOutgoingDto> getMovieById(Integer id);
 	
 	MovieOutgoingDto updateMovie(MovieIncomingDto movie);
 
-	boolean deleteMovie(int id);
+	void deleteMovie(Integer id);
 
 }

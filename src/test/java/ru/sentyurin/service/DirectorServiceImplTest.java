@@ -3,6 +3,8 @@ package ru.sentyurin.service;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,23 +17,26 @@ import ru.sentyurin.controller.dto.DirectorIncomingDto;
 import ru.sentyurin.controller.dto.DirectorOutgoingDto;
 import ru.sentyurin.controller.mapper.DirectorDtoMapper;
 import ru.sentyurin.controller.mapper.DirectorDtoMapperImpl;
-import ru.sentyurin.dao.DirectorDao;
 import ru.sentyurin.model.Director;
+import ru.sentyurin.repository.DirectorRepository;
+import ru.sentyurin.repository.MovieRepository;
 import ru.sentyurin.service.impl.DirectorServiceImpl;
 import ru.sentyurin.util.exception.IncompleateInputExeption;
 
 class DirectorServiceImplTest {
-	
-	private DirectorDao directorRepository;
+
+	private DirectorRepository directorRepository;
+	private MovieRepository movieRepository;
 	private DirectorDtoMapper dtoMapper;
 	private DirectorServiceImpl directorService;
 	private DirectorDtoMapperImpl mapper;
 
 	@BeforeEach
 	void init() {
-		directorRepository = Mockito.mock(DirectorDao.class);
+		directorRepository = Mockito.mock(DirectorRepository.class);
+		movieRepository = Mockito.mock(MovieRepository.class);
 		dtoMapper = new DirectorDtoMapperImpl();
-		directorService = new DirectorServiceImpl(directorRepository, dtoMapper);
+		directorService = new DirectorServiceImpl(directorRepository, movieRepository, dtoMapper);
 		mapper = new DirectorDtoMapperImpl();
 	}
 
@@ -76,7 +81,7 @@ class DirectorServiceImplTest {
 		assertThrows(IncompleateInputExeption.class,
 				() -> directorService.updateDirector(directorToUpdate));
 	}
-	
+
 	@Test
 	void shouldThrowExceptionIfUpdateWithoutName() {
 		DirectorIncomingDto directorToUpdate = new DirectorIncomingDto(1, null);
@@ -87,23 +92,22 @@ class DirectorServiceImplTest {
 	@Test
 	void shouldCorrectlyUpdate() {
 		DirectorIncomingDto directorToUpdate = new DirectorIncomingDto(1, "Quentin Tarantino");
+		Mockito.doReturn(mapper.map(directorToUpdate)).when(directorRepository)
+				.save(Mockito.any(Director.class));
 		Mockito.doReturn(Optional.of(mapper.map(directorToUpdate))).when(directorRepository)
-				.update(Mockito.any(Director.class));
+				.findById(Mockito.any(Integer.class));
 		DirectorOutgoingDto director = directorService.updateDirector(directorToUpdate);
 		assertEquals(directorToUpdate.getName(), director.getName());
 	}
 
 	@Test
-	void shouldReturnTheSameBooleanValueAsRepositoryWhenDelete() {
-		Mockito.doReturn(true).when(directorRepository).deleteById(Mockito.anyInt());
-		assertEquals(true, directorService.deleteDirector(1));
-		Mockito.doReturn(false).when(directorRepository).deleteById(Mockito.anyInt());
-		assertEquals(false, directorService.deleteDirector(1));
-	}
-	
-	@Test
-	void shouldReturnDirectorRepository() {
-		assertEquals(directorRepository, directorService.getDirectorRepository());
+	void shouldDelete() {
+		Integer directorId = 7;
+		directorService.deleteDirector(directorId);
+		verify(movieRepository).deleteByDirectorId(directorId);
+		verifyNoMoreInteractions(movieRepository);
+		verify(directorRepository).deleteById(directorId);
+		verifyNoMoreInteractions(directorRepository);
 	}
 
 }

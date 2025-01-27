@@ -66,19 +66,7 @@ class DirectorControllerTest {
 	@Test
 	void shouldReturnCorrectStatusWhenDeleteById() {
 		Integer directorIdToDelete = 2;
-		Mockito.when(service.deleteDirector(directorIdToDelete)).thenReturn(true);
-		ResponseEntity<String> response = controller.doDelete(directorIdToDelete);
-		assertEquals(HttpStatus.OK, response.getStatusCode());
-		verify(service).deleteDirector(directorIdToDelete);
-		verifyNoMoreInteractions(service);
-	}
-
-	@Test
-	void shouldThrowExceptionWhenDeleteByIdWithInvalidId() {
-		Integer directorIdToDelete = 2;
-		Mockito.when(service.deleteDirector(any(Integer.class))).thenReturn(false);
-		assertThrows(NoDataInRepositoryException.class,
-				() -> controller.doDelete(directorIdToDelete));
+		controller.doDelete(directorIdToDelete);
 		verify(service).deleteDirector(directorIdToDelete);
 		verifyNoMoreInteractions(service);
 	}

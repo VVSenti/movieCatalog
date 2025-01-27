@@ -65,18 +65,7 @@ class MovieControllerTest {
 	@Test
 	void shouldDeleteById() {
 		Integer movieIdToDelete = 3;
-		Mockito.when(service.deleteMovie(movieIdToDelete)).thenReturn(true);
-		ResponseEntity<String> response = controller.doDelete(movieIdToDelete);
-		assertEquals(HttpStatus.OK, response.getStatusCode());
-		verify(service).deleteMovie(movieIdToDelete);
-		verifyNoMoreInteractions(service);
-	}
-	
-	@Test
-	void shouldThrowExceptionWhenDeleteWithInvalidId() {
-		Integer movieIdToDelete = 5;
-		Mockito.when(service.deleteMovie(movieIdToDelete)).thenReturn(false);
-		assertThrows(NoDataInRepositoryException.class, () -> controller.doDelete(movieIdToDelete));
+		controller.doDelete(movieIdToDelete);
 		verify(service).deleteMovie(movieIdToDelete);
 		verifyNoMoreInteractions(service);
 	}

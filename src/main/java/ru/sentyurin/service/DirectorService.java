@@ -12,10 +12,10 @@ public interface DirectorService {
 
 	List<DirectorOutgoingDto> getDirectors();
 
-	Optional<DirectorOutgoingDto> getDirectorById(int id);
+	Optional<DirectorOutgoingDto> getDirectorById(Integer id);
 	
 	DirectorOutgoingDto updateDirector(DirectorIncomingDto director);
 
-	boolean deleteDirector(int id);
+	void deleteDirector(Integer id);
 
 }

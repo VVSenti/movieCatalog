@@ -3,6 +3,8 @@ package ru.sentyurin.service;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,9 +17,10 @@ import ru.sentyurin.controller.dto.MovieIncomingDto;
 import ru.sentyurin.controller.dto.MovieOutgoingDto;
 import ru.sentyurin.controller.mapper.MovieDtoMapper;
 import ru.sentyurin.controller.mapper.MovieDtoMapperImpl;
-import ru.sentyurin.dao.MovieDao;
 import ru.sentyurin.model.Director;
 import ru.sentyurin.model.Movie;
+import ru.sentyurin.repository.DirectorRepository;
+import ru.sentyurin.repository.MovieRepository;
 import ru.sentyurin.service.impl.MovieServiceImpl;
 import ru.sentyurin.util.exception.IncompleateInputExeption;
 import ru.sentyurin.util.exception.IncorrectInputException;
@@ -25,15 +28,17 @@ import ru.sentyurin.util.exception.IncorrectInputException;
 class MovieServiceImplTest {
 
 	private MovieServiceImpl movieService;
-	private MovieDao movieRepository;
+	private MovieRepository movieRepository;
+	private DirectorRepository directorRepository;
 	private MovieDtoMapperImpl mapper;
 	private MovieDtoMapper dtoMapper;
 
 	@BeforeEach
 	void init() {
-		movieRepository = Mockito.mock(MovieDao.class);
+		movieRepository = Mockito.mock(MovieRepository.class);
+		directorRepository = Mockito.mock(DirectorRepository.class);
 		dtoMapper = new MovieDtoMapperImpl();
-		movieService = new MovieServiceImpl(movieRepository, dtoMapper);
+		movieService = new MovieServiceImpl(movieRepository, directorRepository, dtoMapper);
 		mapper = new MovieDtoMapperImpl();
 	}
 
@@ -71,8 +76,8 @@ class MovieServiceImplTest {
 
 	@Test
 	void shouldReturnMovieById() {
-		Mockito.doReturn(Optional.of(new Movie(1, "RD", 1992, null)))
-				.when(movieRepository).findById(Mockito.anyInt());
+		Mockito.doReturn(Optional.of(new Movie(1, "RD", 1992, null))).when(movieRepository)
+				.findById(Mockito.anyInt());
 		Optional<MovieOutgoingDto> movie = movieService.getMovieById(1);
 		assertTrue(movie.isPresent());
 		assertEquals("RD", movie.get().getTitle());
@@ -81,58 +86,50 @@ class MovieServiceImplTest {
 	@Test
 	void shouldThrowExceptionIfUpdateWithoutId() {
 		MovieIncomingDto movieToUpdate = new MovieIncomingDto(null, "RD", 2012, 1, "QT");
-		assertThrows(IncompleateInputExeption.class,
-				() -> movieService.updateMovie(movieToUpdate));
+		assertThrows(IncompleateInputExeption.class, () -> movieService.updateMovie(movieToUpdate));
 	}
 
 	@Test
 	void shouldThrowExceptionIfUpdateWithoutTitle() {
 		MovieIncomingDto movieToUpdate = new MovieIncomingDto(1, null, 2012, 1, "QT");
-		assertThrows(IncompleateInputExeption.class,
-				() -> movieService.updateMovie(movieToUpdate));
+		assertThrows(IncompleateInputExeption.class, () -> movieService.updateMovie(movieToUpdate));
 	}
-	
+
 	@Test
 	void shouldThrowExceptionIfUpdateWithoutReleaseYear() {
 		MovieIncomingDto movieToUpdate = new MovieIncomingDto(1, "RD", null, 1, "QT");
-		assertThrows(IncompleateInputExeption.class,
-				() -> movieService.updateMovie(movieToUpdate));
+		assertThrows(IncompleateInputExeption.class, () -> movieService.updateMovie(movieToUpdate));
 	}
-	
+
 	@Test
 	void shouldThrowExceptionIfUpdateWithInvalidReleaseYear() {
 		MovieIncomingDto movieToUpdate = new MovieIncomingDto(1, "RD", 1000, 1, "QT");
-		assertThrows(IncorrectInputException.class,
-				() -> movieService.updateMovie(movieToUpdate));
+		assertThrows(IncorrectInputException.class, () -> movieService.updateMovie(movieToUpdate));
 	}
-	
+
 	@Test
 	void shouldThrowExceptionIfUpdateWithoutDirectorIdAndTheirName() {
 		MovieIncomingDto movieToUpdate = new MovieIncomingDto(1, "RD", 1992, null, null);
-		assertThrows(IncompleateInputExeption.class,
-				() -> movieService.updateMovie(movieToUpdate));
+		assertThrows(IncompleateInputExeption.class, () -> movieService.updateMovie(movieToUpdate));
+	}
+	
+	@Test
+	void shouldDelete() {
+		Integer movieId = 7;
+		movieService.deleteMovie(movieId);
+		verify(movieRepository).deleteById(movieId);
+		verifyNoMoreInteractions(movieRepository);
 	}
 
 	@Test
 	void shouldCorrectlyUpdate() {
 		MovieIncomingDto movieToUpdate = new MovieIncomingDto(1, "RD", 1992, 1, "QT");
+		Mockito.doReturn(mapper.map(movieToUpdate)).when(movieRepository)
+				.save(Mockito.any(Movie.class));
 		Mockito.doReturn(Optional.of(mapper.map(movieToUpdate))).when(movieRepository)
-				.update(Mockito.any(Movie.class));
+				.findById(Mockito.any(Integer.class));
 		MovieOutgoingDto movie = movieService.updateMovie(movieToUpdate);
 		assertEquals(movieToUpdate.getTitle(), movie.getTitle());
-	}
-
-	@Test
-	void shouldReturnTheSameBooleanValueAsRepositoryWhenDelete() {
-		Mockito.doReturn(true).when(movieRepository).deleteById(Mockito.anyInt());
-		assertEquals(true, movieService.deleteMovie(1));
-		Mockito.doReturn(false).when(movieRepository).deleteById(Mockito.anyInt());
-		assertEquals(false, movieService.deleteMovie(1));
-	}
-
-	@Test
-	void shouldReturnDirectorRepository() {
-		assertEquals(movieRepository, movieService.getMovieRepository());
 	}
 
 }

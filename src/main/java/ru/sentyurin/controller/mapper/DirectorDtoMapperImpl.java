@@ -3,7 +3,6 @@ package ru.sentyurin.controller.mapper;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.annotations.Comment;
 import org.springframework.stereotype.Component;
 
 import ru.sentyurin.controller.dto.DirectorIncomingDto;

@@ -48,22 +48,6 @@ public class SpringConfig implements WebMvcConfigurer {
 		return dataSource;
 	}
 
-//	@Bean
-//	public LocalSessionFactoryBean sessionFactory() {
-//		LocalSessionFactoryBean sessionFactory = new LocalSessionFactoryBean();
-//		sessionFactory.setDataSource(dataSource());
-//		sessionFactory.setPackagesToScan("ru.sentyurin.model");
-//		sessionFactory.setHibernateProperties(hibernateProperties());
-//		return sessionFactory;
-//	}
-
-//	@Bean
-//	public PlatformTransactionManager hibernateTransactionManager() {
-//		HibernateTransactionManager transactionManager = new HibernateTransactionManager();
-//		transactionManager.setSessionFactory(sessionFactory().getObject());
-//		return transactionManager;
-//	}
-
 	@Bean
 	public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
 		LocalContainerEntityManagerFactoryBean emf = new LocalContainerEntityManagerFactoryBean();

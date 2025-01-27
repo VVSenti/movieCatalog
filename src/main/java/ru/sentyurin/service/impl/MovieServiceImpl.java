@@ -10,30 +10,28 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.sentyurin.controller.dto.MovieIncomingDto;
 import ru.sentyurin.controller.dto.MovieOutgoingDto;
 import ru.sentyurin.controller.mapper.MovieDtoMapper;
-import ru.sentyurin.dao.MovieDao;
-import ru.sentyurin.dao.Dao;
+import ru.sentyurin.model.Director;
 import ru.sentyurin.model.Movie;
+import ru.sentyurin.repository.DirectorRepository;
+import ru.sentyurin.repository.MovieRepository;
 import ru.sentyurin.service.MovieService;
 import ru.sentyurin.util.exception.IncompleateInputExeption;
 import ru.sentyurin.util.exception.IncorrectInputException;
+import ru.sentyurin.util.exception.NoDataInRepositoryException;
 
 @Service
 public class MovieServiceImpl implements MovieService {
 
-	private final Dao<Movie, Integer> movieRepository;
+	private final MovieRepository movieRepository;
+	private final DirectorRepository directorRepository;
 	private final MovieDtoMapper dtoMapper;
-	
-	@Autowired
-	public MovieServiceImpl(Dao<Movie, Integer> movieRepositoryHiber, MovieDtoMapper movieDtoMapper) {
-		movieRepository = movieRepositoryHiber;
-		dtoMapper = movieDtoMapper;
-	}
 
-	/**
-	 * Gets a repository of movie entities
-	 */
-	public Dao<Movie, Integer> getMovieRepository() {
-		return movieRepository;
+	@Autowired
+	public MovieServiceImpl(MovieRepository movieRepository, DirectorRepository directorRepository,
+			MovieDtoMapper movieDtoMapper) {
+		this.movieRepository = movieRepository;
+		this.directorRepository = directorRepository;
+		dtoMapper = movieDtoMapper;
 	}
 
 	/**
@@ -54,6 +52,7 @@ public class MovieServiceImpl implements MovieService {
 	public MovieOutgoingDto createMovie(MovieIncomingDto movie)
 			throws IncompleateInputExeption, IncorrectInputException {
 		validateMovieData(movie);
+		movie.setId(null);
 		return mapToOutgoingDto(movieRepository.save(mapFromIncomingDto(movie)));
 	}
 
@@ -71,7 +70,7 @@ public class MovieServiceImpl implements MovieService {
 	 */
 	@Override
 	@Transactional
-	public Optional<MovieOutgoingDto> getMovieById(int id) {
+	public Optional<MovieOutgoingDto> getMovieById(Integer id) {
 		Optional<Movie> optionalMovie = movieRepository.findById(id);
 		return optionalMovie.isEmpty() ? Optional.empty()
 				: Optional.of(mapToOutgoingDto(optionalMovie.get()));
@@ -100,7 +99,16 @@ public class MovieServiceImpl implements MovieService {
 		if (movie.getId() == null)
 			throw new IncompleateInputExeption("There must be a movie ID");
 		validateMovieData(movie);
-		return mapToOutgoingDto(movieRepository.update(mapFromIncomingDto(movie)).orElseThrow());
+		Movie movieToUpdate = movieRepository.findById(movie.getId()).orElseThrow(
+				() -> new NoDataInRepositoryException("There is no movie with such ID"));
+		movieToUpdate.setReleaseYear(movie.getReleaseYear());
+		movieToUpdate.setTitle(movie.getTitle());
+		if (!movieToUpdate.getDirector().getId().equals(movie.getDirectorId())) {
+			Director director = directorRepository.findById(movie.getDirectorId()).orElseThrow(
+					() -> new NoDataInRepositoryException("There is no director with such ID"));
+			movieToUpdate.setDirector(director);
+		}
+		return mapToOutgoingDto(movieRepository.save(movieToUpdate));
 	}
 
 	/**
@@ -108,8 +116,8 @@ public class MovieServiceImpl implements MovieService {
 	 */
 	@Override
 	@Transactional
-	public boolean deleteMovie(int id) {
-		return movieRepository.deleteById(id);
+	public void deleteMovie(Integer id) {
+		movieRepository.deleteById(id);
 	}
 
 	private void validateMovieData(MovieIncomingDto movie)
@@ -121,8 +129,8 @@ public class MovieServiceImpl implements MovieService {
 		if (movie.getReleaseYear() < 1895)
 			throw new IncorrectInputException(
 					"A release year is less than 1895. It is unacceptably suspicious");
-		if (movie.getDirectorId() == null && movie.getDirectorName() == null)
-			throw new IncompleateInputExeption("There must be director ID or their name");
+		if (movie.getDirectorId() == null)
+			throw new IncompleateInputExeption("There must be director ID");
 	}
 
 	private MovieOutgoingDto mapToOutgoingDto(Movie movie) {
